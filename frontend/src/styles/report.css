@@ -1,0 +1,152 @@
+/* ── Report Page ──────────────────────────────────────────── */
+
+.report-hero {
+  background: linear-gradient(135deg,
+    rgba(30, 64, 175, 0.15) 0%,
+    rgba(217, 119, 6, 0.08) 100%
+  );
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: var(--radius-xl);
+  padding: var(--space-3xl);
+  margin-bottom: var(--space-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.report-hero::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08), transparent 70%);
+  pointer-events: none;
+}
+
+.report-hero-label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-secondary);
+  margin-bottom: var(--space-md);
+}
+
+.report-hero-objective {
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  color: var(--color-accent);
+  margin-bottom: var(--space-xl);
+  line-height: var(--leading-relaxed);
+}
+
+.report-metrics-banner {
+  display: flex;
+  gap: var(--space-2xl);
+  flex-wrap: wrap;
+}
+
+.report-metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.report-metric-label {
+  font-size: var(--text-xs);
+  color: var(--color-muted-foreground);
+  margin-bottom: var(--space-xs);
+}
+
+.report-metric-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.report-metric-value.primary {
+  color: var(--color-success);
+}
+
+.report-metric-value.secondary {
+  color: var(--color-secondary);
+}
+
+.report-metric-value.accent {
+  color: var(--color-accent);
+}
+
+.report-section {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-2xl);
+  margin-bottom: var(--space-xl);
+}
+
+.report-section-title {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted-foreground);
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.recommendation-box {
+  background: rgba(16, 185, 129, 0.06);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-md);
+  padding: var(--space-xl) var(--space-2xl);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  color: var(--color-foreground);
+}
+
+.best-model-params {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  background: var(--color-muted);
+  border-radius: var(--radius-md);
+  padding: var(--space-xl);
+  overflow-x: auto;
+  white-space: pre;
+  color: var(--color-secondary);
+}
+
+.report-iteration-row {
+  display: grid;
+  grid-template-columns: 40px 1fr repeat(3, 90px) 80px;
+  gap: var(--space-lg);
+  align-items: center;
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  border-bottom: 1px solid var(--color-border);
+  transition: background var(--transition-fast);
+}
+
+.report-iteration-row:last-child {
+  border-bottom: none;
+}
+
+.report-iteration-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.report-iteration-row.header {
+  color: var(--color-muted-foreground);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.report-iteration-row.best-row {
+  background: rgba(217, 119, 6, 0.05);
+  border-color: rgba(217, 119, 6, 0.2);
+}
