@@ -53,16 +53,39 @@ def record_experiment(history, result):
     return history
 
 
+
 def suggest_next_experiment(history):
-    tested = {
-        result["n_estimators"]
-        for result in history
-    }
-
     candidates = [50, 100, 200, 300, 500]
+    tested = {result["n_estimators"] for result in history}
 
-    for trees in candidates:
-        if trees not in tested:
-            return trees
+    remaining = [
+        trees for trees in candidates
+        if trees not in tested
+    ]
 
-    return None
+    if not remaining:
+        return None
+
+    eligible = [
+        result for result in history
+        if result["metrics"]["precision"] >= 0.70
+    ]
+
+    if not eligible:
+        return remaining[0]
+
+    best = max(
+        eligible,
+        key=lambda result: result["metrics"]["recall"],
+    )
+
+    best_trees = best["n_estimators"]
+
+    # Explore the next larger configuration first.
+    larger = [trees for trees in remaining if trees > best_trees]
+
+    if larger:
+        return min(larger)
+
+    # If no larger configuration remains, try the next unused one.
+    return remaining[0]
