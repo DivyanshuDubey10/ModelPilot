@@ -1,130 +1,134 @@
 /* ── Report Page ──────────────────────────────────────────── */
 
+/* Hero: clean row of metrics, no gradient or radial blob */
 .report-hero {
-  background: linear-gradient(135deg,
-    rgba(30, 64, 175, 0.15) 0%,
-    rgba(217, 119, 6, 0.08) 100%
-  );
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: var(--space-3xl);
   margin-bottom: var(--space-xl);
-  position: relative;
-  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
+/* Remove the decorative radial blob */
 .report-hero::before {
-  content: '';
-  position: absolute;
-  top: -60px;
-  right: -60px;
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.08), transparent 70%);
-  pointer-events: none;
+  display: none;
 }
 
+/* Label: sentence case, small muted — no uppercase tracking */
 .report-hero-label {
   font-size: var(--text-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-secondary);
+  font-weight: 500;
+  color: var(--color-text-muted);
   margin-bottom: var(--space-md);
 }
 
+/* Objective: sans, normal text — not amber mono */
 .report-hero-objective {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-base);
-  color: var(--color-accent);
-  margin-bottom: var(--space-xl);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-2xl);
   line-height: var(--leading-relaxed);
 }
 
+/* Metrics row: large numbers, small labels */
 .report-metrics-banner {
   display: flex;
-  gap: var(--space-2xl);
+  gap: var(--space-3xl);
   flex-wrap: wrap;
+  padding-top: var(--space-xl);
+  border-top: 1px solid var(--color-border);
 }
 
 .report-metric {
   display: flex;
   flex-direction: column;
+  gap: var(--space-xs);
 }
 
 .report-metric-label {
   font-size: var(--text-xs);
-  color: var(--color-muted-foreground);
-  margin-bottom: var(--space-xs);
+  color: var(--color-text-muted);
 }
 
+/* Large mono numbers */
 .report-metric-value {
   font-family: var(--font-mono);
   font-size: var(--text-3xl);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
 }
 
+/* Color variants — muted, not neon */
 .report-metric-value.primary {
   color: var(--color-success);
 }
 
 .report-metric-value.secondary {
-  color: var(--color-secondary);
+  color: var(--color-accent);
 }
 
 .report-metric-value.accent {
   color: var(--color-accent);
 }
 
+/* ── Report sections ─────────────────────────────────────── */
+
 .report-section {
-  background: var(--color-card);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   padding: var(--space-2xl);
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-lg);
+  box-shadow: var(--shadow-sm);
 }
 
+/* Section title: sentence case — no uppercase tracking */
 .report-section-title {
-  font-size: var(--text-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-muted-foreground);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
   margin-bottom: var(--space-xl);
   padding-bottom: var(--space-lg);
   border-bottom: 1px solid var(--color-border);
 }
 
+/* Recommendation: light success tint, no bold border */
 .recommendation-box {
-  background: rgba(16, 185, 129, 0.06);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: var(--color-success-tint);
+  border: 1px solid rgba(22, 163, 74, 0.2);
   border-radius: var(--radius-md);
-  padding: var(--space-xl) var(--space-2xl);
+  padding: var(--space-lg) var(--space-xl);
   font-size: var(--text-sm);
   line-height: var(--leading-relaxed);
-  color: var(--color-foreground);
+  color: var(--color-text-secondary);
 }
 
+/* Code block: light style */
 .best-model-params {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  background: var(--color-muted);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: var(--space-xl);
+  padding: var(--space-lg);
   overflow-x: auto;
   white-space: pre;
-  color: var(--color-secondary);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
 }
+
+/* ── Iteration comparison table ──────────────────────────── */
 
 .report-iteration-row {
   display: grid;
-  grid-template-columns: 40px 1fr repeat(3, 90px) 80px;
+  grid-template-columns: 36px 1fr repeat(3, 80px) 72px;
   gap: var(--space-lg);
   align-items: center;
-  padding: var(--space-md) var(--space-lg);
-  border-radius: var(--radius-sm);
+  padding: var(--space-sm) var(--space-md);
   font-size: var(--text-xs);
   border-bottom: 1px solid var(--color-border);
   transition: background var(--transition-fast);
@@ -135,18 +139,18 @@
 }
 
 .report-iteration-row:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--color-muted);
 }
 
+/* Header row: sentence case, no uppercase */
 .report-iteration-row.header {
-  color: var(--color-muted-foreground);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  font-weight: 500;
   border-bottom: 1px solid var(--color-border);
 }
 
+/* Best row: very light accent tint */
 .report-iteration-row.best-row {
-  background: rgba(217, 119, 6, 0.05);
-  border-color: rgba(217, 119, 6, 0.2);
+  background: var(--color-accent-tint);
+  border-color: rgba(99, 91, 255, 0.15);
 }

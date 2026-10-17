@@ -10,25 +10,28 @@ interface MetricProgressChartProps {
 }
 
 const METRIC_COLORS: Record<string, string> = {
-  recall:    '#3B82F6',  // blue
-  precision: '#D97706',  // amber
-  f1:        '#10B981',  // green
-  accuracy:  '#8B5CF6',  // purple
-  roc_auc:   '#EC4899',  // pink
+  recall:    '#635BFF',  // accent indigo
+  precision: '#0EA5E9',  // sky blue
+  f1:        '#10B981',  // emerald
+  accuracy:  '#8B5CF6',  // violet
+  roc_auc:   '#F43F5E',  // rose
 };
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: 'var(--color-card)',
+      background: 'var(--color-surface)',
       border: '1px solid var(--color-border)',
       borderRadius: 'var(--radius-md)',
-      padding: '10px 14px',
+      boxShadow: 'var(--shadow-md)',
+      padding: '8px 12px',
       fontSize: 'var(--text-xs)',
       fontFamily: 'var(--font-mono)',
     }}>
-      <div style={{ marginBottom: 6, color: 'var(--color-muted-foreground)' }}>Iteration #{label}</div>
+      <div style={{ marginBottom: 6, color: 'var(--color-text-muted)', fontFamily: 'var(--font-sans)', fontWeight: 500 }}>
+        Iteration #{label}
+      </div>
       {payload.map((p: any) => (
         <div key={p.dataKey} style={{ color: p.color, marginBottom: 2 }}>
           {p.dataKey}: {(p.value * 100).toFixed(2)}%

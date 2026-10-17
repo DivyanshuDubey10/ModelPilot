@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   PlusCircle,
   ClockCounterClockwise,
-  Trophy,
   ArrowRight,
   Flask,
 } from '@phosphor-icons/react';
@@ -27,12 +26,12 @@ const MOCK_HISTORY: ExperimentSummary[] = [
   },
 ];
 
-function formatDuration(createdAt: string, completedAt?: string): string {
+function formatAge(createdAt: string, completedAt?: string): string {
   const end = completedAt ? new Date(completedAt) : new Date();
   const diff = Math.floor((end.getTime() - new Date(createdAt).getTime()) / 1000);
-  if (diff < 60) return `${diff}s`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ${diff % 60}s`;
-  return `${Math.floor(diff / 3600)}h ${Math.floor((diff % 3600) / 60)}m`;
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  return `${Math.floor(diff / 3600)}h ago`;
 }
 
 export default function HistoryPage() {
@@ -44,9 +43,12 @@ export default function HistoryPage() {
   useEffect(() => {
     listExperiments()
       .then(data => { setExperiments(data); setLoading(false); })
-      .catch(() => {
-        // Use mock data for demo
+      .catch(err => {
         setExperiments(MOCK_HISTORY);
+        setError(null);
+        if (!MOCK_HISTORY.length) {
+          setError(err instanceof Error ? err.message : 'Failed to load experiments');
+        }
         setLoading(false);
       });
   }, []);
@@ -56,23 +58,23 @@ export default function HistoryPage() {
       <div className="page-header">
         <div className="flex items-center justify-between flex-wrap gap-md">
           <div>
-            <h1 className="page-title">Experiment History</h1>
+            <h1 className="page-title">History</h1>
             <p className="page-subtitle">Browse, compare, and revisit past experiments</p>
           </div>
           <button
-            className="btn btn-primary btn-sm"
+            className="btn btn-primary"
             onClick={() => navigate('/experiments/new')}
             type="button"
           >
             <PlusCircle size={16} weight="bold" aria-hidden="true" />
-            New Experiment
+            New experiment
           </button>
         </div>
       </div>
 
       {loading && (
         <div className="flex flex-col gap-md">
-          {[1, 2, 3].map(i => <SkeletonCard key={i} lines={3} showTitle />)}
+          {[1, 2, 3].map(i => <SkeletonCard key={i} lines={2} showTitle />)}
         </div>
       )}
 
@@ -83,7 +85,7 @@ export default function HistoryPage() {
       {!loading && !error && experiments.length === 0 && (
         <div className="card">
           <EmptyState
-            icon={<ClockCounterClockwise size={40} weight="light" />}
+            icon={<ClockCounterClockwise size={32} weight="light" />}
             title="No experiments yet"
             description="Your completed and in-progress experiments will appear here."
             action={
@@ -92,8 +94,8 @@ export default function HistoryPage() {
                 onClick={() => navigate('/experiments/new')}
                 type="button"
               >
-                <PlusCircle size={18} weight="bold" aria-hidden="true" />
-                New Experiment
+                <PlusCircle size={16} weight="bold" aria-hidden="true" />
+                New experiment
               </button>
             }
           />
@@ -101,65 +103,81 @@ export default function HistoryPage() {
       )}
 
       {!loading && experiments.length > 0 && (
-        <div className="flex flex-col gap-md" role="list" aria-label="Experiment list">
-          {experiments.map(exp => (
+        <div
+          className="card"
+          style={{ padding: 0, overflow: 'hidden' }}
+          role="list"
+          aria-label="Experiment list"
+        >
+          {experiments.map((exp, idx) => (
             <div
               key={exp.id}
-              className="card"
-              style={{ cursor: 'pointer', transition: 'border-color var(--transition-fast)' }}
-              onClick={() => navigate(`/experiments/${exp.id}`)}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(59,130,246,0.4)')}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = '')}
               role="listitem"
               tabIndex={0}
               aria-label={`Experiment ${exp.id.slice(0, 8)}: ${exp.objective}`}
+              onClick={() => navigate(`/experiments/${exp.id}`)}
               onKeyDown={e => e.key === 'Enter' && navigate(`/experiments/${exp.id}`)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-xl)',
+                padding: 'var(--space-lg) var(--space-xl)',
+                cursor: 'pointer',
+                borderBottom: idx < experiments.length - 1 ? '1px solid var(--color-border)' : 'none',
+                transition: 'background var(--transition-fast)',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-muted)')}
+              onMouseLeave={e => (e.currentTarget.style.background = '')}
             >
-              <div className="flex items-start justify-between gap-lg flex-wrap">
-                {/* Left */}
-                <div style={{ flex: 1 }}>
-                  <div className="flex items-center gap-lg mb-md flex-wrap">
-                    <span className="font-mono text-sm" style={{ color: 'var(--color-secondary)' }}>
-                      #{exp.id.slice(0, 8)}
-                    </span>
-                    <StatusBadge status={exp.status} />
-                    <span className="text-xs text-muted flex items-center gap-sm">
-                      <Flask size={11} aria-hidden="true" />
-                      {exp.dataset_filename}
-                    </span>
-                    <span className="text-xs text-muted">
-                      {formatDuration(exp.created_at, exp.completed_at)} ago
-                    </span>
-                  </div>
-                  <p className="text-sm" style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-mono)', marginBottom: 'var(--space-sm)' }}>
-                    {exp.objective}
-                  </p>
-                  <div className="text-xs text-muted">
-                    {exp.total_iterations} max iterations
-                  </div>
+              {/* ID + Dataset */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  className="flex items-center gap-md"
+                  style={{ marginBottom: 'var(--space-xs)' }}
+                >
+                  <span
+                    className="font-mono text-xs"
+                    style={{ color: 'var(--color-text-muted)' }}
+                  >
+                    #{exp.id.slice(0, 8)}
+                  </span>
+                  <StatusBadge status={exp.status} />
+                  <span className="text-xs text-muted flex items-center gap-xs">
+                    <Flask size={11} aria-hidden="true" />
+                    {exp.dataset_filename}
+                  </span>
                 </div>
-
-                {/* Right: best metrics */}
-                {exp.best_metric && (
-                  <div className="flex items-center gap-xl">
-                    <div className="flex items-center gap-sm text-xs text-muted mb-xs">
-                      <Trophy size={11} weight="fill" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
-                      Best
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, auto)', gap: '0 var(--space-xl)' }}>
-                      {Object.entries(exp.best_metric).map(([k, v]) => (
-                        <div key={k} style={{ textAlign: 'right' }}>
-                          <div className="text-xs text-muted">{k}</div>
-                          <div className="font-mono text-sm font-bold" style={{ color: 'var(--color-success)' }}>
-                            {(v * 100).toFixed(1)}%
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <ArrowRight size={14} style={{ color: 'var(--color-muted-foreground)' }} aria-hidden="true" />
-                  </div>
-                )}
+                <p
+                  className="text-sm truncate"
+                  style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-xs)' }}
+                >
+                  {exp.objective}
+                </p>
+                <span className="text-xs text-muted">
+                  {formatAge(exp.created_at, exp.completed_at)} · {exp.total_iterations} iterations
+                </span>
               </div>
+
+              {/* Best metrics */}
+              {exp.best_metric && (
+                <div
+                  className="flex items-center gap-xl flex-shrink-0"
+                  style={{ borderLeft: '1px solid var(--color-border)', paddingLeft: 'var(--space-xl)' }}
+                >
+                  {Object.entries(exp.best_metric).map(([k, v]) => (
+                    <div key={k} style={{ textAlign: 'right' }}>
+                      <div className="text-xs text-muted" style={{ marginBottom: 2 }}>{k}</div>
+                      <div
+                        className="font-mono text-sm font-semibold"
+                        style={{ color: 'var(--color-text)' }}
+                      >
+                        {(v * 100).toFixed(1)}%
+                      </div>
+                    </div>
+                  ))}
+                  <ArrowRight size={14} style={{ color: 'var(--color-border-strong)' }} aria-hidden="true" />
+                </div>
+              )}
             </div>
           ))}
         </div>

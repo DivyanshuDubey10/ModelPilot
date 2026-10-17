@@ -62,7 +62,7 @@ export default function Header() {
       <div className="header-right">
         <div className="header-status">
           <span className="header-status-dot" aria-hidden="true" />
-          API Connected
+          <span>API connected</span>
         </div>
       </div>
     </header>

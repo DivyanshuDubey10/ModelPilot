@@ -65,7 +65,7 @@ export default function DatasetProfileView({
       {/* Insights */}
       <div className="flex flex-col gap-md mb-2xl">
         <div className={`profile-insight ${profile.problem_type === 'classification' ? 'info' : 'success'}`}>
-          <Info size={16} weight="fill" style={{ color: 'var(--color-secondary)', flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
+          <Info size={16} weight="fill" style={{ color: 'var(--color-accent)', flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
           <div>
             <span className="font-semibold">Problem type detected: </span>
             <span className="font-mono">{profile.problem_type}</span>
@@ -124,7 +124,7 @@ export default function DatasetProfileView({
                 <CheckCircle
                   size={16}
                   weight="fill"
-                  style={{ color: 'var(--color-secondary)', flexShrink: 0 }}
+                  style={{ color: 'var(--color-accent)', flexShrink: 0 }}
                   aria-hidden="true"
                 />
               )}

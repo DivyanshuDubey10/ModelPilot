@@ -7,12 +7,12 @@ const statusConfig: Record<
   analyzing: {
     label: 'Analyzing',
     className: 'badge-primary',
-    dot: 'var(--color-secondary)',
+    dot: 'var(--color-accent)',
   },
   planning: {
     label: 'Planning',
     className: 'badge-primary',
-    dot: 'var(--color-secondary)',
+    dot: 'var(--color-accent)',
   },
   running: {
     label: 'Running',
@@ -27,7 +27,7 @@ const statusConfig: Record<
   optimizing: {
     label: 'Optimizing',
     className: 'badge-warning',
-    dot: 'var(--color-accent)',
+    dot: 'var(--color-warning)',
   },
   completed: {
     label: 'Completed',
@@ -54,8 +54,8 @@ export default function StatusBadge({ status, showDot = true }: StatusBadgeProps
       {showDot && (
         <span
           style={{
-            width: 6,
-            height: 6,
+            width: 5,
+            height: 5,
             borderRadius: '50%',
             background: config.dot,
             flexShrink: 0,

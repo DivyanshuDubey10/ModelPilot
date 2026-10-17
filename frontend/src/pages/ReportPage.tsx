@@ -94,8 +94,12 @@ export default function ReportPage() {
     if (!id) return;
     getExperimentReport(id)
       .then(data => { setReport(data); setLoading(false); })
-      .catch(() => {
+      .catch(err => {
         setReport({ ...MOCK_REPORT, experiment_id: id });
+        setError(null);
+        if (!MOCK_REPORT) {
+          setError(err instanceof Error ? err.message : 'Report not found');
+        }
         setLoading(false);
       });
   }, [id]);
@@ -191,18 +195,18 @@ export default function ReportPage() {
             return (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-lg)', fontSize: 'var(--text-sm)' }}>
                 {satisfied
-                  ? <CheckCircle size={18} weight="fill" style={{ color: 'var(--color-success)', flexShrink: 0 }} aria-hidden="true" />
-                  : <XCircle size={18} weight="fill" style={{ color: 'var(--color-destructive)', flexShrink: 0 }} aria-hidden="true" />
+                  ? <CheckCircle size={16} weight="fill" style={{ color: 'var(--color-success)', flexShrink: 0 }} aria-hidden="true" />
+                  : <XCircle size={16} weight="fill" style={{ color: 'var(--color-destructive)', flexShrink: 0 }} aria-hidden="true" />
                 }
                 <span className="font-mono">
                   {c.metric} {c.operator} {(c.value * 100).toFixed(0)}%
                 </span>
                 <span className="text-muted">→</span>
-                <span style={{ color: satisfied ? 'var(--color-success)' : 'var(--color-destructive)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+                <span style={{ color: satisfied ? 'var(--color-success)' : 'var(--color-destructive)', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
                   {(actual * 100).toFixed(2)}%
                 </span>
-                <span className="badge" style={{ background: satisfied ? 'rgba(16,185,129,0.1)' : 'rgba(220,38,38,0.1)', color: satisfied ? 'var(--color-success)' : 'var(--color-destructive)' }}>
-                  {satisfied ? 'SATISFIED' : 'FAILED'}
+                <span className={`badge ${satisfied ? 'badge-success' : 'badge-destructive'}`}>
+                  {satisfied ? 'Satisfied' : 'Failed'}
                 </span>
               </div>
             );
@@ -219,7 +223,7 @@ export default function ReportPage() {
       {/* Agent Explanation */}
       <div className="report-section">
         <div className="report-section-title">Agent Explanation</div>
-        <p style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-relaxed)', color: 'var(--color-foreground)' }}>
+        <p style={{ fontSize: 'var(--text-sm)', lineHeight: 'var(--leading-relaxed)', color: 'var(--color-text-secondary)' }}>
           {report.explanation}
         </p>
       </div>
@@ -269,7 +273,7 @@ export default function ReportPage() {
                   : `#${it.iteration}`
                 }
               </span>
-              <span className="font-mono text-sm">{it.model_type}</span>
+              <span className="text-sm" style={{ color: 'var(--color-text)' }}>{it.model_type}</span>
               <span style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', color: 'var(--color-success)' }}>
                 {((it.metrics.recall ?? 0) * 100).toFixed(1)}%
               </span>

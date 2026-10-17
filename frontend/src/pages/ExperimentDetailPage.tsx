@@ -71,13 +71,13 @@ export default function ExperimentDetailPage() {
               </h1>
               <StatusBadge status={status.status} />
               {isStreaming && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)', color: 'var(--color-secondary)' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)', color: 'var(--color-success)' }}>
                   <WifiHigh size={13} weight="fill" aria-hidden="true" />
                   Live
                 </span>
               )}
               {!isStreaming && !isTerminal && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)', color: 'var(--color-muted-foreground)' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
                   <WifiSlash size={13} aria-hidden="true" />
                   Polling
                 </span>
@@ -134,8 +134,8 @@ export default function ExperimentDetailPage() {
       {status.agent_reasoning && (
         <div className="reasoning-card">
           <div className="reasoning-header">
-            <Brain size={15} weight="fill" style={{ color: 'var(--color-secondary)' }} aria-hidden="true" />
-            <span className="reasoning-label">Agent Reasoning</span>
+            <Brain size={14} weight="fill" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
+            <span className="reasoning-label">Agent reasoning</span>
             {!isTerminal && <span className="reasoning-dot pulse" aria-hidden="true" />}
           </div>
           <p className="reasoning-text" aria-live="polite">{status.agent_reasoning}</p>
@@ -172,9 +172,9 @@ export default function ExperimentDetailPage() {
 
       {/* Iteration Timeline */}
       <div className="card" style={{ padding: 'var(--space-xl)' }}>
-        <h3 style={{ marginBottom: 'var(--space-xl)', fontSize: 'var(--text-sm)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-muted-foreground)' }}>
-          Experiment Timeline
-        </h3>
+        <div className="text-sm font-semibold" style={{ marginBottom: 'var(--space-xl)', color: 'var(--color-text)' }}>
+          Experiment timeline
+        </div>
         <div className="timeline">
           {[...status.iterations].reverse().map(iteration => (
             <IterationCard
@@ -185,7 +185,7 @@ export default function ExperimentDetailPage() {
             />
           ))}
           {status.iterations.length === 0 && (
-            <div style={{ textAlign: 'center', padding: 'var(--space-3xl)', color: 'var(--color-muted-foreground)', fontSize: 'var(--text-sm)' }}>
+            <div style={{ textAlign: 'center', padding: 'var(--space-3xl)', color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)' }}>
               Experiment is starting up…
             </div>
           )}

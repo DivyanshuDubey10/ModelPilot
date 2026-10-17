@@ -10,8 +10,8 @@ interface MetricComparisonBarProps {
 }
 
 const METRIC_COLORS: Record<string, string> = {
-  recall:    '#3B82F6',
-  precision: '#D97706',
+  recall:    '#635BFF',
+  precision: '#0EA5E9',
   f1:        '#10B981',
 };
 
@@ -19,14 +19,15 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: 'var(--color-card)',
+      background: 'var(--color-surface)',
       border: '1px solid var(--color-border)',
       borderRadius: 'var(--radius-md)',
-      padding: '10px 14px',
+      boxShadow: 'var(--shadow-md)',
+      padding: '8px 12px',
       fontSize: 'var(--text-xs)',
       fontFamily: 'var(--font-mono)',
     }}>
-      <div style={{ marginBottom: 6, color: 'var(--color-muted-foreground)' }}>#{label}</div>
+      <div style={{ marginBottom: 6, color: 'var(--color-text-muted)', fontFamily: 'var(--font-sans)', fontWeight: 500 }}>#{label}</div>
       {payload.map((p: any) => (
         <div key={p.dataKey} style={{ color: p.fill, marginBottom: 2 }}>
           {p.dataKey}: {(p.value * 100).toFixed(2)}%
@@ -65,7 +66,7 @@ export default function MetricComparisonBar({ iterations, bestIteration }: Metri
           tickLine={false}
           axisLine={false}
         />
-        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
         <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'var(--font-mono)', paddingTop: 8 }} />
         {Object.keys(METRIC_COLORS).map(metric => (
           <Bar key={metric} dataKey={metric} fill={METRIC_COLORS[metric]} radius={[3, 3, 0, 0]}>

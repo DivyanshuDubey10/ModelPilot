@@ -22,7 +22,7 @@ export default function LoadingSpinner({ size = 24, label }: LoadingSpinnerProps
       <style>{`
         .spinner-icon {
           animation: spin 0.8s linear infinite;
-          color: var(--color-secondary);
+          color: var(--color-accent);
         }
         @keyframes spin {
           to { transform: rotate(360deg); }
