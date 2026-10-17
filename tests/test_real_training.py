@@ -12,6 +12,7 @@ from backend.ml_engine.experiment_runner import (
     record_experiment,
     suggest_next_experiment,
 )
+from backend.agent.planner import recommend_experiment
 
 df = pd.read_csv("backend/datasets/AIDS_Classification.csv")
 
@@ -43,15 +44,25 @@ print(best["model_name"], best["metrics"])
 from backend.ml_engine.experiment_runner import record_experiment
 
 
+
 history = []
 max_experiments = 5
 
 for _ in range(max_experiments):
-    trees = suggest_next_experiment(history)
+    recommendation = recommend_experiment(
+        history,
+        objective="recall",
+        min_precision=0.70,
+    )
+
+    trees = recommendation["n_estimators"]
 
     if trees is None:
-        print("All candidate configurations tested.")
+        print("All configurations tested.")
         break
+
+    print("\nNemotron's recommendation:")
+    print(recommendation["reason"])
 
     result = run_experiment(
         X,
@@ -63,7 +74,7 @@ for _ in range(max_experiments):
 
     record_experiment(history, result)
 
-    print(f"\nRandom Forest — {trees} trees")
+    print(f"Trees: {trees}")
     print("Metrics:", result["metrics"])
 
 best = select_best_experiment(
@@ -72,9 +83,11 @@ best = select_best_experiment(
     min_precision=0.70,
 )
 
-print("\nBest configuration:")
+print("\nBest configuration meeting the precision constraint:")
+
 if best is not None:
     print("Trees:", best["n_estimators"])
     print("Metrics:", best["metrics"])
 else:
-    print("No configuration met the precision requirement.")
+    print("No experiment met the precision requirement.")
+
