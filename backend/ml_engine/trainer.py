@@ -3,21 +3,26 @@ from sklearn.pipeline import Pipeline
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 
-def train_model(X, y, preprocessor, model_name="logistic_regression"):
+def train_model(
+    X, y, preprocessor,
+    model_name="logistic_regression",
+    n_estimators=100,
+):
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
     if model_name == "random_forest":
         classifier = RandomForestClassifier(
-            n_estimators=100, random_state=42
+            n_estimators=n_estimators,
+            random_state=42,
         )
     else:
         classifier = LogisticRegression(max_iter=1000)
 
     model = Pipeline([
         ("preprocessor", preprocessor),
-        ("classifier", classifier)
+        ("classifier", classifier),
     ])
 
     model.fit(X_train, y_train)
