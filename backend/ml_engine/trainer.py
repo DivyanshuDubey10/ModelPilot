@@ -1,0 +1,26 @@
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+
+def train_model(X, y, preprocessor, model_name="logistic_regression"):
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y
+    )
+
+    if model_name == "random_forest":
+        classifier = RandomForestClassifier(
+            n_estimators=100, random_state=42
+        )
+    else:
+        classifier = LogisticRegression(max_iter=1000)
+
+    model = Pipeline([
+        ("preprocessor", preprocessor),
+        ("classifier", classifier)
+    ])
+
+    model.fit(X_train, y_train)
+    predictions = model.predict(X_test)
+
+    return model, y_test, predictions
