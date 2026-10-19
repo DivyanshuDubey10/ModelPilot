@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import { CaretRight } from '@phosphor-icons/react';
+import { CaretRight, List, X } from '@phosphor-icons/react';
 
 const routeNames: Record<string, string> = {
   '/': 'Dashboard',
@@ -28,13 +28,33 @@ function getBreadcrumbs(pathname: string): { label: string; path: string }[] {
   return crumbs;
 }
 
-export default function Header() {
+interface HeaderProps {
+  onToggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
+}
+
+export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) {
   const location = useLocation();
   const breadcrumbs = getBreadcrumbs(location.pathname);
 
   return (
     <header className="header">
       <div className="header-left">
+        {onToggleSidebar && (
+          <button
+            id="mobile-menu-btn"
+            className="header-menu-btn"
+            onClick={onToggleSidebar}
+            aria-label={isSidebarOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            type="button"
+          >
+            {isSidebarOpen ? (
+              <X size={18} weight="bold" aria-hidden="true" />
+            ) : (
+              <List size={18} weight="bold" aria-hidden="true" />
+            )}
+          </button>
+        )}
         <nav className="header-breadcrumb" aria-label="Breadcrumb">
           {breadcrumbs.map((crumb, index) => (
             <span key={crumb.path} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
@@ -59,12 +79,7 @@ export default function Header() {
         </nav>
       </div>
 
-      <div className="header-right">
-        <div className="header-status">
-          <span className="header-status-dot" aria-hidden="true" />
-          <span>API connected</span>
-        </div>
-      </div>
+      <div className="header-right" />
     </header>
   );
 }
