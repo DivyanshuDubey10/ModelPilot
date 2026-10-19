@@ -57,3 +57,41 @@ def load_optimization_run(run_id):
 
     with run_file.open("r", encoding="utf-8") as file:
         return json.load(file)
+
+
+def list_optimization_runs():
+    """Return a list of summaries for all saved optimization runs."""
+    if not RUNS_DIR.exists():
+        return []
+
+    summaries = []
+    for run_file in sorted(RUNS_DIR.glob("*.json"), reverse=True):
+        try:
+            with run_file.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+            # Build a lightweight summary
+            experiments = data.get("experiments", [])
+            meta = data.get("metadata", {})
+            best_metrics = None
+            if experiments:
+                # Pick the experiment with highest objective score
+                objective = meta.get("objective", "recall")
+                best = max(
+                    experiments,
+                    key=lambda e: e.get("metrics", {}).get(objective, 0),
+                )
+                best_metrics = best.get("metrics", {})
+            summaries.append({
+                "run_id": data.get("run_id"),
+                "created_at": data.get("created_at"),
+                "dataset_path": meta.get("dataset_path", ""),
+                "target": meta.get("target", ""),
+                "objective": meta.get("objective", ""),
+                "min_precision": meta.get("min_precision"),
+                "total_experiments": len(experiments),
+                "best_metrics": best_metrics,
+            })
+        except Exception:
+            continue
+
+    return summaries

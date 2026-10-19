@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from backend.ml_engine.preprocessor import (
     prepare_data,
@@ -16,12 +16,19 @@ from backend.database.history_store import (
     save_experiment,
     save_optimization_run,
     load_optimization_run,
+    load_history,
+    list_optimization_runs,
 )
 import uuid
 import pandas as pd
+from pathlib import Path
 
 from backend.ml_engine.profiler import profile_dataset
 from backend.ml_engine.problem_detector import detect_problem_type
+
+# Directory where uploaded datasets are saved
+UPLOAD_DIR = Path(__file__).resolve().parents[2] / "backend" / "datasets"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 router = APIRouter()
 
@@ -377,4 +384,75 @@ def analyze_dataset(request: DatasetRequest):
         raise HTTPException(
             status_code=400,
             detail=f"Could not analyze dataset: {exc}",
+        )
+
+
+# ── File Upload ───────────────────────────────────────────────
+
+@router.post("/upload")
+async def upload_dataset(file: UploadFile = File(...)):
+    """
+    Accept a CSV upload, save it to backend/datasets/, profile it,
+    and return the profile so the wizard can proceed.
+    """
+    if not file.filename or not file.filename.endswith(".csv"):
+        raise HTTPException(
+            status_code=400,
+            detail="Only CSV files are supported.",
+        )
+
+    try:
+        dest = UPLOAD_DIR / file.filename
+        contents = await file.read()
+        dest.write_bytes(contents)
+
+        import io
+        df = pd.read_csv(io.BytesIO(contents))
+        profile = profile_dataset(df)
+
+        return {
+            "dataset_path": str(dest),
+            "filename": file.filename,
+            "rows": profile["rows"],
+            "columns": profile["columns"],
+            "column_names": profile["column_names"],
+            "data_types": profile["data_types"],
+            "missing_values": profile["missing_values"],
+            "duplicates": profile["duplicates"],
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Could not process uploaded file: {exc}",
+        )
+
+
+# ── History list ──────────────────────────────────────────────
+
+@router.get("/history")
+def get_history():
+    """Return all saved experiment records from experiment_history.json."""
+    try:
+        return load_history()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Could not load history: {exc}",
+        )
+
+
+# ── Optimization runs list ────────────────────────────────────
+
+@router.get("/runs")
+def list_runs():
+    """Return summary list of all saved optimization run JSON files."""
+    try:
+        return list_optimization_runs()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Could not list runs: {exc}",
         )

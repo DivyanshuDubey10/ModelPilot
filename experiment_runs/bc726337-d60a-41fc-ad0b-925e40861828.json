@@ -1,0 +1,41 @@
+{
+  "run_id": "bc726337-d60a-41fc-ad0b-925e40861828",
+  "created_at": "2026-10-19T18:28:04.290585+00:00",
+  "metadata": {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "max_experiments": 2
+  },
+  "experiments": [
+    {
+      "dataset_path": "backend/datasets/AIDS_Classification.csv",
+      "target": "infected",
+      "objective": "recall",
+      "min_precision": 0.7,
+      "model_name": "random_forest",
+      "n_estimators": 50,
+      "metrics": {
+        "accuracy": 0.8948598130841121,
+        "precision": 0.8314606741573034,
+        "recall": 0.7115384615384616,
+        "f1": 0.7668393782383419
+      }
+    },
+    {
+      "dataset_path": "backend/datasets/AIDS_Classification.csv",
+      "target": "infected",
+      "objective": "recall",
+      "min_precision": 0.7,
+      "model_name": "random_forest",
+      "n_estimators": 100,
+      "metrics": {
+        "accuracy": 0.8948598130841121,
+        "precision": 0.8172043010752689,
+        "recall": 0.7307692307692307,
+        "f1": 0.7715736040609137
+      }
+    }
+  ]
+}
