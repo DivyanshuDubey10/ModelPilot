@@ -1,0 +1,341 @@
+[
+  {
+    "model_name": "random_forest",
+    "n_estimators": 200,
+    "metrics": {
+      "precision": 0.821,
+      "recall": 0.75,
+      "f1": 0.784
+    }
+  },
+  {
+    "model_name": "random_forest",
+    "n_estimators": 200,
+    "metrics": {
+      "accuracy": 0.8995327102803738,
+      "precision": 0.8210526315789474,
+      "recall": 0.75,
+      "f1": 0.7839195979899497
+    }
+  },
+  {
+    "model_name": "random_forest",
+    "n_estimators": 300,
+    "metrics": {
+      "accuracy": 0.8901869158878505,
+      "precision": 0.8,
+      "recall": 0.7307692307692307,
+      "f1": 0.7638190954773869
+    }
+  },
+  {
+    "model_name": "random_forest",
+    "n_estimators": 500,
+    "metrics": {
+      "accuracy": 0.8925233644859814,
+      "precision": 0.8085106382978723,
+      "recall": 0.7307692307692307,
+      "f1": 0.7676767676767676
+    }
+  },
+  {
+    "model_name": "random_forest",
+    "n_estimators": 100,
+    "metrics": {
+      "accuracy": 0.8948598130841121,
+      "precision": 0.8172043010752689,
+      "recall": 0.7307692307692307,
+      "f1": 0.7715736040609137
+    }
+  },
+  {
+    "model_name": "random_forest",
+    "n_estimators": 50,
+    "metrics": {
+      "accuracy": 0.8948598130841121,
+      "precision": 0.8314606741573034,
+      "recall": 0.7115384615384616,
+      "f1": 0.7668393782383419
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 200,
+    "metrics": {
+      "accuracy": 0.8995327102803738,
+      "precision": 0.8210526315789474,
+      "recall": 0.75,
+      "f1": 0.7839195979899497
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 300,
+    "metrics": {
+      "accuracy": 0.8901869158878505,
+      "precision": 0.8,
+      "recall": 0.7307692307692307,
+      "f1": 0.7638190954773869
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 100,
+    "metrics": {
+      "accuracy": 0.8948598130841121,
+      "precision": 0.8172043010752689,
+      "recall": 0.7307692307692307,
+      "f1": 0.7715736040609137
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 500,
+    "metrics": {
+      "accuracy": 0.8925233644859814,
+      "precision": 0.8085106382978723,
+      "recall": 0.7307692307692307,
+      "f1": 0.7676767676767676
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 50,
+    "metrics": {
+      "accuracy": 0.8948598130841121,
+      "precision": 0.8314606741573034,
+      "recall": 0.7115384615384616,
+      "f1": 0.7668393782383419
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 200,
+    "metrics": {
+      "accuracy": 0.8995327102803738,
+      "precision": 0.8210526315789474,
+      "recall": 0.75,
+      "f1": 0.7839195979899497
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 500,
+    "metrics": {
+      "accuracy": 0.8925233644859814,
+      "precision": 0.8085106382978723,
+      "recall": 0.7307692307692307,
+      "f1": 0.7676767676767676
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 100,
+    "metrics": {
+      "accuracy": 0.8948598130841121,
+      "precision": 0.8172043010752689,
+      "recall": 0.7307692307692307,
+      "f1": 0.7715736040609137
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 300,
+    "metrics": {
+      "accuracy": 0.8901869158878505,
+      "precision": 0.8,
+      "recall": 0.7307692307692307,
+      "f1": 0.7638190954773869
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 50,
+    "metrics": {
+      "accuracy": 0.8948598130841121,
+      "precision": 0.8314606741573034,
+      "recall": 0.7115384615384616,
+      "f1": 0.7668393782383419
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 200,
+    "metrics": {
+      "accuracy": 0.8995327102803738,
+      "precision": 0.8210526315789474,
+      "recall": 0.75,
+      "f1": 0.7839195979899497
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 300,
+    "metrics": {
+      "accuracy": 0.8901869158878505,
+      "precision": 0.8,
+      "recall": 0.7307692307692307,
+      "f1": 0.7638190954773869
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 500,
+    "metrics": {
+      "accuracy": 0.8925233644859814,
+      "precision": 0.8085106382978723,
+      "recall": 0.7307692307692307,
+      "f1": 0.7676767676767676
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 100,
+    "metrics": {
+      "accuracy": 0.8948598130841121,
+      "precision": 0.8172043010752689,
+      "recall": 0.7307692307692307,
+      "f1": 0.7715736040609137
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 50,
+    "metrics": {
+      "accuracy": 0.8948598130841121,
+      "precision": 0.8314606741573034,
+      "recall": 0.7115384615384616,
+      "f1": 0.7668393782383419
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 200,
+    "metrics": {
+      "accuracy": 0.8995327102803738,
+      "precision": 0.8210526315789474,
+      "recall": 0.75,
+      "f1": 0.7839195979899497
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 500,
+    "metrics": {
+      "accuracy": 0.8925233644859814,
+      "precision": 0.8085106382978723,
+      "recall": 0.7307692307692307,
+      "f1": 0.7676767676767676
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 100,
+    "metrics": {
+      "accuracy": 0.8948598130841121,
+      "precision": 0.8172043010752689,
+      "recall": 0.7307692307692307,
+      "f1": 0.7715736040609137
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 300,
+    "metrics": {
+      "accuracy": 0.8901869158878505,
+      "precision": 0.8,
+      "recall": 0.7307692307692307,
+      "f1": 0.7638190954773869
+    }
+  },
+  {
+    "dataset_path": "backend/datasets/AIDS_Classification.csv",
+    "target": "infected",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 50,
+    "metrics": {
+      "accuracy": 0.8948598130841121,
+      "precision": 0.8314606741573034,
+      "recall": 0.7115384615384616,
+      "f1": 0.7668393782383419
+    }
+  }
+]
