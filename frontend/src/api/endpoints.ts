@@ -1,47 +1,81 @@
 // ============================================================
-// ModelPilot API Endpoints
-// All backend communication goes through these functions
+// ModelPilot API Endpoints — aligned to FastAPI backend
 // ============================================================
 
 import { api } from './client';
 import type {
-  DatasetProfile,
-  CreateExperimentRequest,
-  ExperimentStatus,
-  ExperimentSummary,
-  FinalReport,
+  UploadResponse,
+  ProfileResponse,
+  OptimizeRequest,
+  OptimizeResponse,
+  OptimizationRun,
+  RunSummary,
+  HistoryRecord,
 } from './types';
 
-// ── Dataset ──────────────────────────────────────────────────
+// ── Health ────────────────────────────────────────────────────
 
-export async function uploadDataset(file: File): Promise<DatasetProfile> {
+export async function checkHealth(): Promise<{ status: string; service: string }> {
+  return api.get('/api/health');
+}
+
+// ── Dataset Upload ────────────────────────────────────────────
+
+/**
+ * Upload a CSV file. The backend saves it to backend/datasets/ and
+ * returns a profile + the server-side path used in subsequent calls.
+ */
+export async function uploadDataset(file: File): Promise<UploadResponse> {
   const formData = new FormData();
   formData.append('file', file);
-  return api.postForm<DatasetProfile>('/api/datasets/upload', formData);
+  return api.postForm<UploadResponse>('/api/upload', formData);
 }
 
-export async function getDatasetProfile(id: string): Promise<DatasetProfile> {
-  return api.get<DatasetProfile>(`/api/datasets/${id}`);
+// ── Dataset Profile (by path) ─────────────────────────────────
+
+export async function profileDataset(
+  dataset_path: string,
+  target: string
+): Promise<ProfileResponse> {
+  return api.post<ProfileResponse>('/api/profile', { dataset_path, target });
 }
 
-// ── Experiments ──────────────────────────────────────────────
+// ── Problem Analysis ──────────────────────────────────────────
 
-export async function createExperiment(
-  data: CreateExperimentRequest
-): Promise<ExperimentStatus> {
-  return api.post<ExperimentStatus>('/api/experiments', data);
+export async function analyzeDataset(
+  dataset_path: string,
+  target: string
+): Promise<{ dataset_path: string; target: string; analysis: ProfileResponse['problem_type'] }> {
+  return api.post('/api/analyze', { dataset_path, target });
 }
 
-export async function getExperiment(id: string): Promise<ExperimentStatus> {
-  return api.get<ExperimentStatus>(`/api/experiments/${id}`);
+// ── Autonomous Optimization ───────────────────────────────────
+
+/**
+ * Run the autonomous optimization loop.
+ * The backend tries up to max_experiments Random Forest configurations,
+ * selects the best by objective, and returns all results synchronously.
+ */
+export async function runOptimization(
+  data: OptimizeRequest
+): Promise<OptimizeResponse> {
+  return api.post<OptimizeResponse>('/api/optimize', data);
 }
 
-export async function listExperiments(): Promise<ExperimentSummary[]> {
-  return api.get<ExperimentSummary[]>('/api/experiments');
+// ── Retrieve a Saved Optimization Run ────────────────────────
+
+export async function getOptimizationRun(runId: string): Promise<OptimizationRun> {
+  return api.get<OptimizationRun>(`/api/optimize/${runId}`);
 }
 
-// ── Report ───────────────────────────────────────────────────
+// ── List All Optimization Runs ────────────────────────────────
 
-export async function getExperimentReport(id: string): Promise<FinalReport> {
-  return api.get<FinalReport>(`/api/experiments/${id}/report`);
+export async function listRuns(): Promise<RunSummary[]> {
+  return api.get<RunSummary[]>('/api/runs');
+}
+
+// ── Flat Experiment History ───────────────────────────────────
+
+export async function getHistory(): Promise<HistoryRecord[]> {
+  return api.get<HistoryRecord[]>('/api/history');
 }
