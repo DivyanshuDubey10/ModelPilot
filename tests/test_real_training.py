@@ -1,5 +1,7 @@
 
 import pandas as pd
+from backend.database.history_store import save_experiment
+from backend.database.history_store import load_history, save_experiment
 
 from backend.ml_engine.preprocessor import (
     prepare_data,
@@ -45,7 +47,9 @@ from backend.ml_engine.experiment_runner import record_experiment
 
 
 
-history = []
+from backend.database.history_store import load_history
+
+history = load_history()
 max_experiments = 5
 
 for _ in range(max_experiments):
@@ -73,6 +77,11 @@ for _ in range(max_experiments):
     )
 
     record_experiment(history, result)
+    save_experiment({
+    "model_name": result["model_name"],
+    "n_estimators": result["n_estimators"],
+    "metrics": result["metrics"],
+})
 
     print(f"Trees: {trees}")
     print("Metrics:", result["metrics"])
