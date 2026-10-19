@@ -10,6 +10,7 @@
   align-items: center;
   gap: 0;
   margin-bottom: var(--space-3xl);
+  padding-bottom: var(--space-2xl);
 }
 
 .step-item {
@@ -408,4 +409,83 @@
   color: var(--color-text);
   line-height: var(--leading-relaxed);
   margin-top: var(--space-xs);
+}
+
+/* ── Responsive Wizard ────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .wizard-card {
+    padding: var(--space-xl) var(--space-md);
+    border-radius: var(--radius-lg);
+  }
+
+  .step-indicator {
+    padding: 0 42px var(--space-2xl) 42px;
+    margin-bottom: var(--space-2xl);
+  }
+
+  /* All step labels centered in the middle directly under each number */
+  .step-label {
+    display: block !important;
+    font-size: 11px;
+    top: calc(100% + 7px);
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    text-align: center !important;
+    white-space: nowrap;
+  }
+
+  .upload-zone {
+    padding: var(--space-xl) var(--space-md);
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+
+  .constraint-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    background: var(--color-background);
+    padding: var(--space-sm);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+  }
+
+  .constraint-row .select:first-child {
+    flex: 2 1 120px;
+  }
+
+  .constraint-row .select:nth-child(2) {
+    flex: 1 1 50px;
+  }
+
+  .constraint-row .input {
+    flex: 2 1 80px;
+  }
+
+  .constraint-row .remove-btn {
+    flex: 0 0 32px;
+  }
+
+  .wizard-footer {
+    gap: var(--space-sm);
+  }
+
+  .wizard-footer .btn {
+    padding: 8px var(--space-md);
+  }
+}
+
+@media (max-width: 420px) {
+  .wizard-card {
+    padding: var(--space-lg) var(--space-sm);
+  }
+
+  .wizard-step-title {
+    font-size: var(--text-lg);
+  }
 }

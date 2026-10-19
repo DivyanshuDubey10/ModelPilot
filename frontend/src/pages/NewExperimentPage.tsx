@@ -99,7 +99,7 @@ export default function NewExperimentPage() {
 
       <div className="wizard-container">
         {/* Step Indicator */}
-        <div className="step-indicator" style={{ marginBottom: 'var(--space-3xl)', paddingBottom: 'var(--space-2xl)' }}>
+        <div className="step-indicator">
           {STEPS.map((s, idx) => (
             <div key={s.n} className="step-item">
               <div
