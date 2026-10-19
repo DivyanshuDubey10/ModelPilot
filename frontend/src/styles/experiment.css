@@ -360,8 +360,21 @@
 /* ── Responsive ───────────────────────────────────────────── */
 
 @media (max-width: 768px) {
+  .experiment-header-card {
+    padding: var(--space-lg);
+  }
+
+  .experiment-meta {
+    gap: var(--space-sm) var(--space-lg);
+  }
+
+  .reasoning-card {
+    padding: var(--space-md);
+  }
+
   .charts-grid {
     grid-template-columns: 1fr;
+    gap: var(--space-lg);
   }
 
   .iteration-metrics-grid {
@@ -370,5 +383,38 @@
 
   .iteration-metrics-peek {
     display: none;
+  }
+
+  .iteration-params {
+    font-size: 11px;
+    padding: var(--space-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .experiment-header-card {
+    padding: var(--space-md);
+    border-radius: var(--radius-lg);
+  }
+
+  .iteration-header {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .iteration-number {
+    gap: var(--space-sm);
+  }
+
+  .iteration-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .metric-cell {
+    padding: var(--space-sm);
+  }
+
+  .metric-cell-value {
+    font-size: var(--text-base);
   }
 }

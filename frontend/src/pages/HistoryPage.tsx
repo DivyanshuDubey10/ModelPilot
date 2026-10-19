@@ -109,30 +109,20 @@ export default function HistoryPage() {
           role="list"
           aria-label="Experiment list"
         >
-          {experiments.map((exp, idx) => (
+          {experiments.map((exp) => (
             <div
               key={exp.id}
               role="listitem"
               tabIndex={0}
+              className="history-item"
               aria-label={`Experiment ${exp.id.slice(0, 8)}: ${exp.objective}`}
               onClick={() => navigate(`/experiments/${exp.id}`)}
               onKeyDown={e => e.key === 'Enter' && navigate(`/experiments/${exp.id}`)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--space-xl)',
-                padding: 'var(--space-lg) var(--space-xl)',
-                cursor: 'pointer',
-                borderBottom: idx < experiments.length - 1 ? '1px solid var(--color-border)' : 'none',
-                transition: 'background var(--transition-fast)',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-muted)')}
-              onMouseLeave={e => (e.currentTarget.style.background = '')}
             >
               {/* ID + Dataset */}
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="history-item-main">
                 <div
-                  className="flex items-center gap-md"
+                  className="flex items-center gap-md flex-wrap"
                   style={{ marginBottom: 'var(--space-xs)' }}
                 >
                   <span
@@ -160,21 +150,20 @@ export default function HistoryPage() {
 
               {/* Best metrics */}
               {exp.best_metric && (
-                <div
-                  className="flex items-center gap-xl flex-shrink-0"
-                  style={{ borderLeft: '1px solid var(--color-border)', paddingLeft: 'var(--space-xl)' }}
-                >
-                  {Object.entries(exp.best_metric).map(([k, v]) => (
-                    <div key={k} style={{ textAlign: 'right' }}>
-                      <div className="text-xs text-muted" style={{ marginBottom: 2 }}>{k}</div>
-                      <div
-                        className="font-mono text-sm font-semibold"
-                        style={{ color: 'var(--color-text)' }}
-                      >
-                        {(v * 100).toFixed(1)}%
+                <div className="history-item-metrics">
+                  <div className="flex items-center gap-lg">
+                    {Object.entries(exp.best_metric).map(([k, v]) => (
+                      <div key={k} style={{ textAlign: 'right' }}>
+                        <div className="text-xs text-muted" style={{ marginBottom: 2 }}>{k}</div>
+                        <div
+                          className="font-mono text-sm font-semibold"
+                          style={{ color: 'var(--color-text)' }}
+                        >
+                          {(v * 100).toFixed(1)}%
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                   <ArrowRight size={14} style={{ color: 'var(--color-border-strong)' }} aria-hidden="true" />
                 </div>
               )}

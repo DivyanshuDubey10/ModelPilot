@@ -154,3 +154,69 @@
   background: var(--color-accent-tint);
   border-color: rgba(99, 91, 255, 0.15);
 }
+
+/* ── Duo grid for parameters & confusion matrix ──────────── */
+.report-grid-duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xl);
+}
+
+/* ── Scrollable iteration table on mobile ─────────────────── */
+.report-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.report-table-scroll .report-iteration-row {
+  min-width: 520px;
+}
+
+/* ── Responsive Report ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .report-hero {
+    padding: var(--space-xl) var(--space-lg);
+  }
+
+  .report-metrics-banner {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+  }
+
+  .report-metric-value {
+    font-size: var(--text-2xl);
+  }
+
+  .report-section {
+    padding: var(--space-lg);
+  }
+
+  .report-grid-duo {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .report-hero {
+    padding: var(--space-lg) var(--space-md);
+    border-radius: var(--radius-lg);
+  }
+
+  .report-section {
+    padding: var(--space-md);
+    border-radius: var(--radius-lg);
+  }
+
+  .report-metrics-banner {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+
+  .report-metric-value {
+    font-size: var(--text-xl);
+  }
+}

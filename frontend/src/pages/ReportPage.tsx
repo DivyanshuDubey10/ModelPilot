@@ -229,7 +229,7 @@ export default function ReportPage() {
       </div>
 
       {/* Best model params + confusion matrix */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-xl)' }} className="mb-xl">
+      <div className="report-grid-duo mb-xl">
         <div className="report-section" style={{ margin: 0 }}>
           <div className="report-section-title">Best Model Parameters</div>
           <div className="best-model-params">
@@ -253,7 +253,7 @@ export default function ReportPage() {
       {/* Iteration comparison table */}
       <div className="report-section">
         <div className="report-section-title">All Iterations</div>
-        <div>
+        <div className="report-table-scroll">
           <div className="report-iteration-row header">
             <span>#</span>
             <span>Model</span>

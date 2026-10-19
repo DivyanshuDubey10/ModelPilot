@@ -62,7 +62,7 @@ export default function ExperimentDetailPage() {
       <div className="page-header">
         <div className="flex items-center justify-between flex-wrap gap-md">
           <div>
-            <div className="flex items-center gap-lg mb-sm">
+            <div className="flex items-center gap-lg mb-sm flex-wrap">
               <h1 className="page-title" style={{ marginBottom: 0 }}>
                 Experiment{' '}
                 <span className="text-primary font-mono" style={{ fontSize: '0.75em' }}>
