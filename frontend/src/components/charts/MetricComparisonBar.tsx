@@ -2,7 +2,11 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, Cell,
 } from 'recharts';
-import type { ExperimentIteration } from '../../api/types';
+// Local interface decoupled from legacy types
+export interface ExperimentIteration {
+  iteration: number;
+  metrics: Record<string, number>;
+}
 
 interface MetricComparisonBarProps {
   iterations: ExperimentIteration[];

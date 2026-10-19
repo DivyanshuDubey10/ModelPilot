@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { Plus, X } from '@phosphor-icons/react';
-import type { Constraint } from '../../api/types';
+
+// Constraint is a wizard-local UI concept (not a backend type)
+export interface Constraint {
+  metric: string;
+  operator: '>=' | '<=' | '>' | '<';
+  value: number;
+}
+
 
 const METRICS = ['recall', 'precision', 'f1', 'accuracy', 'roc_auc', 'pr_auc'];
 const OPERATORS = [

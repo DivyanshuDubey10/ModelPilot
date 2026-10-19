@@ -2,7 +2,18 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   Legend, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
-import type { ExperimentIteration, Constraint } from '../../api/types';
+
+// Local types (decoupled from API layer)
+interface ExperimentIteration {
+  iteration: number;
+  metrics: Record<string, number>;
+}
+
+interface Constraint {
+  metric: string;
+  operator: string;
+  value: number;
+}
 
 interface MetricProgressChartProps {
   iterations: ExperimentIteration[];

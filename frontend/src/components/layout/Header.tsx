@@ -57,7 +57,7 @@ export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) 
         )}
         <nav className="header-breadcrumb" aria-label="Breadcrumb">
           {breadcrumbs.map((crumb, index) => (
-            <span key={crumb.path} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+            <span key={`${crumb.path}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
               {index > 0 && (
                 <CaretRight
                   size={12}

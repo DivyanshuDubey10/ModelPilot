@@ -1,31 +1,151 @@
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Brain,
   Flask,
   Clock,
   ArrowRight,
-  WifiHigh,
-  WifiSlash,
+  Trophy,
+  CheckCircle,
+  XCircle,
+  ChartBar,
 } from '@phosphor-icons/react';
-import { useExperimentSSE } from '../hooks/useExperimentSSE';
-import IterationCard from '../components/experiment/IterationCard';
-import MetricProgressChart from '../components/charts/MetricProgressChart';
-import MetricComparisonBar from '../components/charts/MetricComparisonBar';
-import ConfusionMatrix from '../components/charts/ConfusionMatrix';
-import ProgressBar from '../components/shared/ProgressBar';
-import StatusBadge from '../components/shared/StatusBadge';
+import type { OptimizationRun, OptimizeExperiment } from '../api/types';
+import { getOptimizationRun } from '../api/endpoints';
 import SkeletonCard from '../components/shared/SkeletonCard';
 import ErrorState from '../components/shared/ErrorState';
 import '../styles/experiment.css';
 
+function MetricBar({ label, value, max = 1, accent = false }: {
+  label: string;
+  value: number;
+  max?: number;
+  accent?: boolean;
+}) {
+  const pct = Math.min(100, (value / max) * 100);
+  return (
+    <div style={{ marginBottom: 'var(--space-md)' }}>
+      <div className="flex items-center justify-between mb-xs">
+        <span className="text-xs text-muted font-medium">{label}</span>
+        <span className="font-mono text-xs font-semibold" style={{ color: accent ? 'var(--color-accent)' : 'var(--color-text)' }}>
+          {(value * 100).toFixed(1)}%
+        </span>
+      </div>
+      <div style={{ height: 6, background: 'var(--color-border)', borderRadius: 99, overflow: 'hidden' }}>
+        <div style={{
+          height: '100%',
+          width: `${pct}%`,
+          background: accent ? 'var(--color-accent)' : 'var(--color-border-strong)',
+          borderRadius: 99,
+          transition: 'width 0.4s ease',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+function ExperimentCard({ exp, index, isBest, objective }: {
+  exp: OptimizeExperiment;
+  index: number;
+  isBest: boolean;
+  objective: string;
+}) {
+  const [open, setOpen] = useState(isBest);
+  const satisfies = exp.metrics.precision >= exp.min_precision;
+
+  return (
+    <div
+      className={`timeline-item ${isBest ? 'best' : ''}`}
+      style={{
+        border: isBest ? '1px solid var(--color-accent)' : '1px solid var(--color-border)',
+        borderRadius: 'var(--radius-lg)',
+        overflow: 'hidden',
+        marginBottom: 'var(--space-md)',
+      }}
+    >
+      <button
+        type="button"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--space-md)',
+          width: '100%',
+          padding: 'var(--space-lg)',
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          textAlign: 'left',
+        }}
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+      >
+        <div style={{
+          width: 28, height: 28, borderRadius: '50%',
+          background: isBest ? 'var(--color-accent)' : 'var(--color-border)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
+        }}>
+          {isBest
+            ? <Trophy size={14} weight="fill" style={{ color: 'white' }} />
+            : <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)' }}>#{index + 1}</span>
+          }
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="flex items-center gap-md flex-wrap">
+            <span className="font-semibold text-sm">{exp.model_name.replace('_', ' ')}</span>
+            <span className="font-mono text-xs text-muted">{exp.n_estimators} trees</span>
+            {isBest && <span className="badge badge-primary">Best</span>}
+            {satisfies
+              ? <CheckCircle size={14} weight="fill" style={{ color: 'var(--color-success)' }} aria-label="Precision satisfied" />
+              : <XCircle size={14} weight="fill" style={{ color: 'var(--color-destructive)' }} aria-label="Precision not satisfied" />
+            }
+          </div>
+          <div className="flex items-center gap-lg mt-xs flex-wrap">
+            {Object.entries(exp.metrics).slice(0, 4).map(([k, v]) => (
+              <span key={k} className="text-xs text-muted">
+                {k}: <span className="font-mono font-semibold" style={{ color: 'var(--color-text)' }}>{(v * 100).toFixed(1)}%</span>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <ChartBar size={16} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} aria-hidden="true" />
+      </button>
+
+      {open && (
+        <div style={{ padding: 'var(--space-lg)', paddingTop: 0, borderTop: '1px solid var(--color-border)' }}>
+          {Object.entries(exp.metrics).map(([k, v]) => (
+            <MetricBar key={k} label={k} value={v} accent={k === objective} />
+          ))}
+          <div className="flex items-center gap-sm mt-md text-xs text-muted">
+            <span>Precision constraint: ≥ {(exp.min_precision * 100).toFixed(0)}%</span>
+            <span>→</span>
+            <span style={{ color: satisfies ? 'var(--color-success)' : 'var(--color-destructive)', fontWeight: 600 }}>
+              {(exp.metrics.precision * 100).toFixed(1)}% — {satisfies ? 'Satisfied ✓' : 'Not met ✗'}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ExperimentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [run, setRun] = useState<OptimizationRun | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { status, loading, error, isStreaming } = useExperimentSSE({
-    experimentId: id,
-    enabled: true,
-  });
+  useEffect(() => {
+    if (!id) return;
+    getOptimizationRun(id)
+      .then(data => { setRun(data); setLoading(false); })
+      .catch(err => {
+        setError(err instanceof Error ? err.message : 'Experiment not found');
+        setLoading(false);
+      });
+  }, [id]);
 
   if (loading) {
     return (
@@ -42,19 +162,24 @@ export default function ExperimentDetailPage() {
     );
   }
 
-  if (error && !status) {
+  if (error || !run) {
     return (
       <ErrorState
         title="Experiment not found"
-        message={error}
+        message={error || 'Run data could not be loaded.'}
         onRetry={() => window.location.reload()}
       />
     );
   }
 
-  if (!status) return null;
+  const meta = run.metadata;
+  const experiments = run.experiments;
 
-  const isTerminal = status.status === 'completed' || status.status === 'failed';
+  // Find best: highest objective metric that also satisfies min_precision
+  const satisfying = experiments.filter(e => e.metrics.precision >= meta.min_precision);
+  const best = satisfying.length > 0
+    ? satisfying.reduce((a, b) => (b.metrics[meta.objective] ?? 0) > (a.metrics[meta.objective] ?? 0) ? b : a)
+    : null;
 
   return (
     <>
@@ -69,128 +194,84 @@ export default function ExperimentDetailPage() {
                   {id?.slice(0, 8)}
                 </span>
               </h1>
-              <StatusBadge status={status.status} />
-              {isStreaming && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)', color: 'var(--color-success)' }}>
-                  <WifiHigh size={13} weight="fill" aria-hidden="true" />
-                  Live
-                </span>
-              )}
-              {!isStreaming && !isTerminal && (
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
-                  <WifiSlash size={13} aria-hidden="true" />
-                  Polling
-                </span>
-              )}
+              <span className="badge badge-success">Completed</span>
             </div>
-            <p className="page-subtitle">{status.current_step}</p>
+            <p className="page-subtitle">
+              {experiments.length} configurations tested · Dataset: <span className="font-mono">{meta.dataset_path.split('/').pop()}</span>
+            </p>
           </div>
-          {isTerminal && (
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={() => navigate(`/experiments/${id}/report`)}
-              type="button"
-            >
-              View Report
-              <ArrowRight size={15} weight="bold" aria-hidden="true" />
-            </button>
-          )}
+          <button
+            className="btn btn-primary btn-sm"
+            onClick={() => navigate(`/experiments/${id}/report`)}
+            type="button"
+          >
+            View Report
+            <ArrowRight size={15} weight="bold" aria-hidden="true" />
+          </button>
         </div>
       </div>
 
-      {/* Header card: objective + progress */}
+      {/* Meta card */}
       <div className="experiment-header-card">
-        {/* Meta row */}
         <div className="experiment-meta">
           <div className="experiment-meta-item">
             <Flask size={13} aria-hidden="true" />
-            <span>{status.iterations.length} iterations run</span>
+            <span>{experiments.length} experiments</span>
           </div>
           <div className="experiment-meta-item">
             <Clock size={13} aria-hidden="true" />
-            <span>{new Date(status.created_at).toLocaleTimeString()}</span>
+            <span>{new Date(run.created_at).toLocaleString()}</span>
           </div>
-          {status.constraints.map((c, i) => (
-            <span key={i} className="badge badge-primary font-mono">
-              {c.metric} {c.operator} {(c.value * 100).toFixed(0)}%
-            </span>
-          ))}
+          <span className="badge badge-primary font-mono">
+            objective: {meta.objective}
+          </span>
+          <span className="badge badge-primary font-mono">
+            precision ≥ {(meta.min_precision * 100).toFixed(0)}%
+          </span>
         </div>
 
-        {/* Objective */}
-        <div className="experiment-objective">{status.objective}</div>
+        <div className="experiment-objective">
+          Maximize <strong>{meta.objective}</strong> on <span className="font-mono">{meta.target}</span> with precision ≥ {(meta.min_precision * 100).toFixed(0)}%
+        </div>
 
-        {/* Progress bar */}
-        <ProgressBar
-          value={status.current_iteration}
-          max={status.total_iterations}
-          label="Experiment progress"
-          showText
-          variant={isTerminal ? 'accent' : 'default'}
-        />
+        {best && (
+          <div style={{
+            marginTop: 'var(--space-lg)',
+            padding: 'var(--space-md) var(--space-lg)',
+            background: 'var(--color-surface-2)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: 'var(--text-sm)',
+          }}>
+            <span className="text-muted">Best result: </span>
+            <span className="font-semibold">{best.model_name}</span>
+            {' — '}
+            {Object.entries(best.metrics).map(([k, v]) => (
+              <span key={k} className="font-mono mr-md">
+                {k}: <strong>{(v * 100).toFixed(1)}%</strong>
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Agent Reasoning */}
-      {status.agent_reasoning && (
-        <div className="reasoning-card">
-          <div className="reasoning-header">
-            <Brain size={14} weight="fill" style={{ color: 'var(--color-accent)' }} aria-hidden="true" />
-            <span className="reasoning-label">Agent reasoning</span>
-            {!isTerminal && <span className="reasoning-dot pulse" aria-hidden="true" />}
-          </div>
-          <p className="reasoning-text" aria-live="polite">{status.agent_reasoning}</p>
-        </div>
-      )}
-
-      {/* Charts (show when ≥ 2 iterations) */}
-      {status.iterations.length >= 2 && (
-        <div className="charts-grid mb-xl">
-          <div className="chart-card">
-            <div className="chart-title">Metric Progression</div>
-            <MetricProgressChart
-              iterations={status.iterations}
-              constraints={status.constraints}
-            />
-          </div>
-          <div className="chart-card">
-            <div className="chart-title">Iteration Comparison</div>
-            <MetricComparisonBar
-              iterations={status.iterations}
-              bestIteration={status.best_result?.iteration}
-            />
-          </div>
-          {status.best_result?.confusion_matrix && (
-            <div className="chart-card">
-              <div className="chart-title">
-                Best Model — Confusion Matrix (#{status.best_result.iteration})
-              </div>
-              <ConfusionMatrix matrix={status.best_result.confusion_matrix} />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Iteration Timeline */}
+      {/* Experiment timeline */}
       <div className="card" style={{ padding: 'var(--space-xl)' }}>
         <div className="text-sm font-semibold" style={{ marginBottom: 'var(--space-xl)', color: 'var(--color-text)' }}>
           Experiment timeline
         </div>
-        <div className="timeline">
-          {[...status.iterations].reverse().map(iteration => (
-            <IterationCard
-              key={iteration.iteration}
-              iteration={iteration}
-              isBest={status.best_result?.iteration === iteration.iteration}
-              defaultOpen={iteration.iteration === status.iterations.length}
+        <div>
+          {experiments.map((exp, idx) => (
+            <ExperimentCard
+              key={idx}
+              exp={exp}
+              index={idx}
+              isBest={best === exp}
+              objective={meta.objective}
             />
           ))}
-          {status.iterations.length === 0 && (
-            <div style={{ textAlign: 'center', padding: 'var(--space-3xl)', color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)' }}>
-              Experiment is starting up…
-            </div>
-          )}
         </div>
       </div>
     </>
   );
 }
+

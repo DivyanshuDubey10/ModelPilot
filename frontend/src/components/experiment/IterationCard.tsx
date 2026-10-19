@@ -1,7 +1,16 @@
 import { useState } from 'react';
 import { CaretDown, CaretUp, Trophy } from '@phosphor-icons/react';
-import type { ExperimentIteration } from '../../api/types';
 import StatusBadge from '../shared/StatusBadge';
+
+export interface ExperimentIteration {
+  iteration: number;
+  model_type: string;
+  duration_seconds: number;
+  metrics: Record<string, number>;
+  parameters: Record<string, unknown>;
+  constraints_met: boolean;
+  observations: string[];
+}
 
 interface IterationCardProps {
   iteration: ExperimentIteration;

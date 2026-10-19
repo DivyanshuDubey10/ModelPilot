@@ -4,51 +4,37 @@ import {
   PlusCircle,
   ClockCounterClockwise,
   ArrowRight,
-  Flask,
+  Database,
 } from '@phosphor-icons/react';
-import type { ExperimentSummary } from '../api/types';
-import { listExperiments } from '../api/endpoints';
-import StatusBadge from '../components/shared/StatusBadge';
+import type { RunSummary } from '../api/types';
+import { listRuns } from '../api/endpoints';
 import EmptyState from '../components/shared/EmptyState';
 import SkeletonCard from '../components/shared/SkeletonCard';
 import ErrorState from '../components/shared/ErrorState';
 
-// ── Mock history for demo ─────────────────────────────────
-const MOCK_HISTORY: ExperimentSummary[] = [
-  {
-    id: 'mock-exp-001',
-    status: 'running',
-    objective: 'Maximize recall while keeping precision above 70%',
-    dataset_filename: 'creditcard.csv',
-    total_iterations: 10,
-    best_metric: { recall: 0.89, precision: 0.78, f1: 0.832 },
-    created_at: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
-  },
-];
-
-function formatAge(createdAt: string, completedAt?: string): string {
-  const end = completedAt ? new Date(completedAt) : new Date();
-  const diff = Math.floor((end.getTime() - new Date(createdAt).getTime()) / 1000);
+function formatAge(createdAt: string): string {
+  const diff = Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000);
   if (diff < 60) return `${diff}s ago`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+function datasetName(path: string): string {
+  return path ? path.split('/').pop() || path : 'Unknown dataset';
 }
 
 export default function HistoryPage() {
   const navigate = useNavigate();
-  const [experiments, setExperiments] = useState<ExperimentSummary[]>([]);
+  const [runs, setRuns] = useState<RunSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    listExperiments()
-      .then(data => { setExperiments(data); setLoading(false); })
+    listRuns()
+      .then(data => { setRuns(data); setLoading(false); })
       .catch(err => {
-        setExperiments(MOCK_HISTORY);
-        setError(null);
-        if (!MOCK_HISTORY.length) {
-          setError(err instanceof Error ? err.message : 'Failed to load experiments');
-        }
+        setError(err instanceof Error ? err.message : 'Failed to load history');
         setLoading(false);
       });
   }, []);
@@ -59,7 +45,7 @@ export default function HistoryPage() {
         <div className="flex items-center justify-between flex-wrap gap-md">
           <div>
             <h1 className="page-title">History</h1>
-            <p className="page-subtitle">Browse, compare, and revisit past experiments</p>
+            <p className="page-subtitle">Browse and revisit past optimization runs</p>
           </div>
           <button
             className="btn btn-primary"
@@ -82,12 +68,12 @@ export default function HistoryPage() {
         <ErrorState message={error} onRetry={() => window.location.reload()} />
       )}
 
-      {!loading && !error && experiments.length === 0 && (
+      {!loading && !error && runs.length === 0 && (
         <div className="card">
           <EmptyState
             icon={<ClockCounterClockwise size={32} weight="light" />}
             title="No experiments yet"
-            description="Your completed and in-progress experiments will appear here."
+            description="Your completed optimization runs will appear here once you run your first experiment."
             action={
               <button
                 className="btn btn-primary"
@@ -102,22 +88,22 @@ export default function HistoryPage() {
         </div>
       )}
 
-      {!loading && experiments.length > 0 && (
+      {!loading && !error && runs.length > 0 && (
         <div
           className="card"
           style={{ padding: 0, overflow: 'hidden' }}
           role="list"
-          aria-label="Experiment list"
+          aria-label="Optimization run list"
         >
-          {experiments.map((exp) => (
+          {runs.map((run) => (
             <div
-              key={exp.id}
+              key={run.run_id}
               role="listitem"
               tabIndex={0}
               className="history-item"
-              aria-label={`Experiment ${exp.id.slice(0, 8)}: ${exp.objective}`}
-              onClick={() => navigate(`/experiments/${exp.id}`)}
-              onKeyDown={e => e.key === 'Enter' && navigate(`/experiments/${exp.id}`)}
+              aria-label={`Run ${run.run_id?.slice(0, 8)}: ${run.objective} on ${datasetName(run.dataset_path)}`}
+              onClick={() => navigate(`/experiments/${run.run_id}`)}
+              onKeyDown={e => e.key === 'Enter' && navigate(`/experiments/${run.run_id}`)}
             >
               {/* ID + Dataset */}
               <div className="history-item-main">
@@ -129,30 +115,31 @@ export default function HistoryPage() {
                     className="font-mono text-xs"
                     style={{ color: 'var(--color-text-muted)' }}
                   >
-                    #{exp.id.slice(0, 8)}
+                    #{run.run_id?.slice(0, 8)}
                   </span>
-                  <StatusBadge status={exp.status} />
+                  <span className="badge badge-success">Completed</span>
                   <span className="text-xs text-muted flex items-center gap-xs">
-                    <Flask size={11} aria-hidden="true" />
-                    {exp.dataset_filename}
+                    <Database size={11} aria-hidden="true" />
+                    {datasetName(run.dataset_path)}
                   </span>
                 </div>
                 <p
-                  className="text-sm truncate"
+                  className="text-sm"
                   style={{ color: 'var(--color-text-secondary)', marginBottom: 'var(--space-xs)' }}
                 >
-                  {exp.objective}
+                  Maximize <strong>{run.objective}</strong> on <span className="font-mono">{run.target}</span>
+                  {run.min_precision != null && ` with precision ≥ ${(run.min_precision * 100).toFixed(0)}%`}
                 </p>
                 <span className="text-xs text-muted">
-                  {formatAge(exp.created_at, exp.completed_at)} · {exp.total_iterations} iterations
+                  {run.created_at ? formatAge(run.created_at) : '—'} · {run.total_experiments} experiment{run.total_experiments !== 1 ? 's' : ''}
                 </span>
               </div>
 
               {/* Best metrics */}
-              {exp.best_metric && (
+              {run.best_metrics && (
                 <div className="history-item-metrics">
                   <div className="flex items-center gap-lg">
-                    {Object.entries(exp.best_metric).map(([k, v]) => (
+                    {Object.entries(run.best_metrics).slice(0, 3).map(([k, v]) => (
                       <div key={k} style={{ textAlign: 'right' }}>
                         <div className="text-xs text-muted" style={{ marginBottom: 2 }}>{k}</div>
                         <div
@@ -174,3 +161,4 @@ export default function HistoryPage() {
     </>
   );
 }
+

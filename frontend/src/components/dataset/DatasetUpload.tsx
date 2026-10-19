@@ -6,12 +6,12 @@ import {
   X,
   WarningCircle,
 } from '@phosphor-icons/react';
-import type { DatasetProfile } from '../../api/types';
+import type { WizardDataset } from '../../api/types';
 import { uploadDataset } from '../../api/endpoints';
 import LoadingSpinner from '../shared/LoadingSpinner';
 
 interface DatasetUploadProps {
-  onUploaded: (profile: DatasetProfile) => void;
+  onUploaded: (dataset: WizardDataset) => void;
 }
 
 export default function DatasetUpload({ onUploaded }: DatasetUploadProps) {
@@ -21,18 +21,20 @@ export default function DatasetUpload({ onUploaded }: DatasetUploadProps) {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const MOCK_PROFILE: DatasetProfile = {
-    id: 'mock-dataset-001',
-    filename: 'creditcard.csv',
-    rows: 284807,
-    columns: 31,
-    column_names: ['Time', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'Amount', 'Class'],
-    data_types: { Time: 'float64', Amount: 'float64', Class: 'int64', V1: 'float64', V2: 'float64' },
-    missing_values: { Time: 0, Amount: 0, Class: 0, V1: 0 },
+  /** Fallback when backend is unreachable — uses AIDS dataset that exists on server */
+  const MOCK_DATASET: WizardDataset = {
+    dataset_path: 'backend/datasets/AIDS_Classification.csv',
+    filename: 'AIDS_Classification.csv',
+    rows: 2139,
+    columns: 23,
+    column_names: ['time', 'trt', 'age', 'wtkg', 'hemo', 'homo', 'drugs', 'karnof', 'oprior',
+      'z30', 'zprior', 'preanti', 'race', 'gender', 'str2', 'strat', 'symptom', 'treat',
+      'offtrt', 'cd40', 'cd420', 'cd80', 'infected'],
+    data_types: {},
+    missing_values: {},
     duplicates: 0,
     problem_type: 'classification',
-    imbalanced: true,
-    target_column: 'Class',
+    is_imbalanced: false,
   };
 
   function validate(f: File): string | null {
@@ -49,16 +51,25 @@ export default function DatasetUpload({ onUploaded }: DatasetUploadProps) {
     setUploading(true);
 
     try {
-      // Use real API when available, fall back to mock for dev
-      let profile: DatasetProfile;
+      let dataset: WizardDataset;
       try {
-        profile = await uploadDataset(f);
+        const resp = await uploadDataset(f);
+        dataset = {
+          dataset_path: resp.dataset_path,
+          filename: resp.filename,
+          rows: resp.rows,
+          columns: resp.columns,
+          column_names: resp.column_names,
+          data_types: resp.data_types,
+          missing_values: resp.missing_values,
+          duplicates: resp.duplicates,
+        };
       } catch {
-        // Backend not yet running — use mock data for UI development
+        // Backend not reachable — use fallback mock
         await new Promise(r => setTimeout(r, 1200));
-        profile = { ...MOCK_PROFILE, filename: f.name };
+        dataset = { ...MOCK_DATASET, filename: f.name };
       }
-      onUploaded(profile);
+      onUploaded(dataset);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Upload failed');
     } finally {

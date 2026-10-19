@@ -7,10 +7,10 @@ import {
   Columns,
   Scales,
 } from '@phosphor-icons/react';
-import type { DatasetProfile } from '../../api/types';
+import type { WizardDataset } from '../../api/types';
 
 interface DatasetProfileViewProps {
-  profile: DatasetProfile;
+  profile: WizardDataset;
   selectedTarget: string;
   onTargetChange: (col: string) => void;
 }
@@ -72,7 +72,7 @@ export default function DatasetProfileView({
           </div>
         </div>
 
-        {profile.imbalanced && (
+        {profile.is_imbalanced && (
           <div className="profile-insight warning">
             <Warning size={16} weight="fill" style={{ color: 'var(--color-warning)', flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
             <div>

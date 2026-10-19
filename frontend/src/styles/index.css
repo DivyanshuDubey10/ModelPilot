@@ -780,3 +780,10 @@ code, pre, .mono {
     border-radius: var(--radius-lg);
   }
 }
+
+/* ── Margin/padding utilities added for integration ───────── */
+.mr-md { margin-right: var(--space-md); }
+.mr-sm { margin-right: var(--space-sm); }
+.mb-xs { margin-bottom: var(--space-xs); }
+.gap-xs { gap: var(--space-xs); }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

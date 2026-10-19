@@ -6,12 +6,12 @@ import {
   RocketLaunch,
   ArrowLeft,
   ArrowRight,
+  Spinner,
 } from '@phosphor-icons/react';
-import type { DatasetProfile, Constraint } from '../api/types';
-import { createExperiment } from '../api/endpoints';
+import type { WizardDataset } from '../api/types';
+import { runOptimization } from '../api/endpoints';
 import DatasetUpload from '../components/dataset/DatasetUpload';
 import DatasetProfileView from '../components/dataset/DatasetProfile';
-import ConstraintBuilder from '../components/objective/ConstraintBuilder';
 import '../styles/wizard.css';
 
 type Step = 1 | 2 | 3;
@@ -22,33 +22,43 @@ const STEPS = [
   { n: 3, label: 'Set Objective' },
 ];
 
+// Backend accepts: 'recall' | 'f1' | 'accuracy'
+const OBJECTIVE_OPTIONS = [
+  { value: 'recall' as const, label: 'Maximize Recall', description: 'Minimize false negatives — good for fraud/disease detection' },
+  { value: 'f1' as const, label: 'Maximize F1 Score', description: 'Balance between precision and recall' },
+  { value: 'accuracy' as const, label: 'Maximize Accuracy', description: 'Overall correctness across all classes' },
+];
+
 export default function NewExperimentPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
 
-  // Step 1 state
-  const [profile, setProfile] = useState<DatasetProfile | null>(null);
+  // Step 1: uploaded dataset
+  const [dataset, setDataset] = useState<WizardDataset | null>(null);
 
-  // Step 2 state
+  // Step 2: target column selection
   const [targetColumn, setTargetColumn] = useState('');
 
-  // Step 3 state
-  const [objective, setObjective] = useState('');
-  const [constraints, setConstraints] = useState<Constraint[]>([]);
-  const [maxIterations, setMaxIterations] = useState(10);
+  // Step 3: optimization config
+  const [objective, setObjective] = useState<'recall' | 'f1' | 'accuracy'>('recall');
+  const [minPrecision, setMinPrecision] = useState(0.70);
+  const [maxExperiments, setMaxExperiments] = useState(5);
 
   const [launching, setLaunching] = useState(false);
   const [launchError, setLaunchError] = useState<string | null>(null);
 
-  function onProfileReady(p: DatasetProfile) {
-    setProfile(p);
-    setTargetColumn(p.target_column || p.column_names[p.column_names.length - 1]);
+  function onDatasetReady(d: WizardDataset) {
+    setDataset(d);
+    // Auto-select last column as default target
+    if (d.column_names.length > 0) {
+      setTargetColumn(d.column_names[d.column_names.length - 1]);
+    }
   }
 
   function canAdvance(): boolean {
-    if (step === 1) return !!profile;
+    if (step === 1) return !!dataset;
     if (step === 2) return !!targetColumn;
-    if (step === 3) return objective.trim().length > 0;
+    if (step === 3) return true;
     return false;
   }
 
@@ -61,28 +71,22 @@ export default function NewExperimentPage() {
   }
 
   async function launch() {
-    if (!profile || !targetColumn || !objective.trim()) return;
+    if (!dataset || !targetColumn) return;
     setLaunching(true);
     setLaunchError(null);
 
     try {
-      let experiment;
-      try {
-        experiment = await createExperiment({
-          dataset_id: profile.id,
-          target_column: targetColumn,
-          objective: objective.trim(),
-          constraints,
-          max_iterations: maxIterations,
-        });
-        navigate(`/experiments/${experiment.id}`);
-      } catch {
-        // Backend not yet ready — navigate to mock experiment
-        await new Promise(r => setTimeout(r, 800));
-        navigate(`/experiments/mock-exp-001`);
-      }
+      const result = await runOptimization({
+        dataset_path: dataset.dataset_path,
+        target: targetColumn,
+        objective,
+        min_precision: minPrecision,
+        max_experiments: maxExperiments,
+      });
+      // Navigate to the run results page
+      navigate(`/experiments/${result.run_id}`);
     } catch (e) {
-      setLaunchError(e instanceof Error ? e.message : 'Failed to start experiment');
+      setLaunchError(e instanceof Error ? e.message : 'Failed to start optimization');
     } finally {
       setLaunching(false);
     }
@@ -137,12 +141,12 @@ export default function NewExperimentPage() {
                   Drop a CSV file. ModelPilot will profile it automatically.
                 </p>
               </div>
-              <DatasetUpload onUploaded={onProfileReady} />
+              <DatasetUpload onUploaded={onDatasetReady} />
             </>
           )}
 
           {/* Step 2: Profile */}
-          {step === 2 && profile && (
+          {step === 2 && dataset && (
             <>
               <div className="wizard-step-header">
                 <div className="flex items-center justify-between">
@@ -154,12 +158,12 @@ export default function NewExperimentPage() {
                   </div>
                   <div className="flex items-center gap-sm">
                     <Flask size={14} weight="regular" style={{ color: 'var(--color-muted-foreground)' }} aria-hidden="true" />
-                    <span className="text-xs text-muted font-mono">{profile.filename}</span>
+                    <span className="text-xs text-muted font-mono">{dataset.filename}</span>
                   </div>
                 </div>
               </div>
               <DatasetProfileView
-                profile={profile}
+                profile={dataset}
                 selectedTarget={targetColumn}
                 onTargetChange={setTargetColumn}
               />
@@ -170,38 +174,92 @@ export default function NewExperimentPage() {
           {step === 3 && (
             <>
               <div className="wizard-step-header">
-                <h2 className="wizard-step-title">Set Objective & Launch</h2>
+                <h2 className="wizard-step-title">Set Objective &amp; Launch</h2>
                 <p className="wizard-step-desc">
-                  Tell ModelPilot what to optimize and any hard constraints to respect.
+                  Choose what ModelPilot should optimize and configure constraints.
                 </p>
               </div>
 
-              <ConstraintBuilder
-                objective={objective}
-                onObjectiveChange={setObjective}
-                constraints={constraints}
-                onConstraintsChange={setConstraints}
-                maxIterations={maxIterations}
-                onMaxIterationsChange={setMaxIterations}
-              />
+              {/* Objective selector */}
+              <div className="form-group mb-2xl">
+                <label>Optimization Objective <span style={{ color: 'var(--color-destructive)', marginLeft: 2 }}>*</span></label>
+                <p className="form-helper mb-md">What metric should ModelPilot maximize?</p>
+                <div className="flex flex-col gap-md">
+                  {OBJECTIVE_OPTIONS.map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      className={`objective-option ${objective === opt.value ? 'selected' : ''}`}
+                      onClick={() => setObjective(opt.value)}
+                      aria-pressed={objective === opt.value}
+                    >
+                      <div className="flex items-center gap-md">
+                        <div className={`objective-radio ${objective === opt.value ? 'checked' : ''}`} aria-hidden="true" />
+                        <div>
+                          <div className="font-medium text-sm">{opt.label}</div>
+                          <div className="text-xs text-muted mt-xs">{opt.description}</div>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-              {/* Review summary */}
-              {objective && (
+              {/* Min Precision */}
+              <div className="form-group mb-2xl">
+                <label htmlFor="min-precision-input">
+                  Minimum Precision Constraint
+                </label>
+                <p className="form-helper mb-md">
+                  ModelPilot will only accept models that meet this precision threshold (0.0–1.0).
+                </p>
+                <div className="flex items-center gap-md">
+                  <input
+                    id="min-precision-input"
+                    className="input"
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={minPrecision}
+                    onChange={e => setMinPrecision(parseFloat(e.target.value))}
+                    style={{ maxWidth: 120 }}
+                  />
+                  <span className="text-sm text-muted">
+                    ≥ <strong className="font-mono">{(minPrecision * 100).toFixed(0)}%</strong> precision required
+                  </span>
+                </div>
+              </div>
+
+              {/* Max Experiments */}
+              <div className="form-group">
+                <label htmlFor="max-exp-input">Max Experiments (1–5)</label>
+                <input
+                  id="max-exp-input"
+                  className="input"
+                  type="number"
+                  min="1"
+                  max="5"
+                  value={maxExperiments}
+                  onChange={e => setMaxExperiments(parseInt(e.target.value))}
+                  style={{ maxWidth: 120 }}
+                  aria-describedby="max-exp-hint"
+                />
+                <p className="form-helper mt-sm" id="max-exp-hint">
+                  The agent will try up to this many Random Forest configurations.
+                </p>
+              </div>
+
+              {/* Summary */}
+              {dataset && targetColumn && (
                 <div className="review-section mt-2xl">
-                  <div className="review-label">Experiment Summary</div>
-                  <div className="objective-display">{objective}</div>
-                  {constraints.length > 0 && (
-                    <div className="mt-lg flex flex-wrap gap-sm">
-                      {constraints.map((c, i) => (
-                        <span key={i} className="badge badge-primary font-mono">
-                          {c.metric} {c.operator} {c.value}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  <div className="review-label">Optimization Summary</div>
+                  <div className="objective-display">
+                    Maximize <strong>{objective}</strong> with precision ≥ {(minPrecision * 100).toFixed(0)}%
+                  </div>
                   <div className="flex items-center gap-sm mt-lg text-xs text-muted">
                     <Flask size={12} aria-hidden="true" />
-                    Max {maxIterations} iterations · Target: <span className="font-mono">{targetColumn}</span>
+                    Up to {maxExperiments} experiments · Target: <span className="font-mono">{targetColumn}</span> · Dataset: <span className="font-mono">{dataset.filename}</span>
                   </div>
                 </div>
               )}
@@ -242,12 +300,15 @@ export default function NewExperimentPage() {
               <button
                 className="btn btn-primary"
                 onClick={launch}
-                disabled={!canAdvance() || launching}
+                disabled={launching}
                 type="button"
                 aria-busy={launching}
               >
                 {launching ? (
-                  <>Launching…</>
+                  <>
+                    <Spinner size={16} className="spin" aria-hidden="true" />
+                    Running optimization…
+                  </>
                 ) : (
                   <>
                     <RocketLaunch size={16} weight="bold" aria-hidden="true" />
