@@ -7,3 +7,4 @@ scikit-learn
 pydantic
 httpx
 openai
+python-multipart
