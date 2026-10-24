@@ -51,24 +51,17 @@ export default function DatasetUpload({ onUploaded }: DatasetUploadProps) {
     setUploading(true);
 
     try {
-      let dataset: WizardDataset;
-      try {
-        const resp = await uploadDataset(f);
-        dataset = {
-          dataset_path: resp.dataset_path,
-          filename: resp.filename,
-          rows: resp.rows,
-          columns: resp.columns,
-          column_names: resp.column_names,
-          data_types: resp.data_types,
-          missing_values: resp.missing_values,
-          duplicates: resp.duplicates,
-        };
-      } catch {
-        // Backend not reachable — use fallback mock
-        await new Promise(r => setTimeout(r, 1200));
-        dataset = { ...MOCK_DATASET, filename: f.name };
-      }
+      const resp = await uploadDataset(f);
+      const dataset: WizardDataset = {
+        dataset_path: resp.dataset_path,
+        filename: resp.filename,
+        rows: resp.rows,
+        columns: resp.columns,
+        column_names: resp.column_names,
+        data_types: resp.data_types,
+        missing_values: resp.missing_values,
+        duplicates: resp.duplicates,
+      };
       onUploaded(dataset);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Upload failed');
@@ -165,14 +158,26 @@ export default function DatasetUpload({ onUploaded }: DatasetUploadProps) {
         ) : error ? (
           <>
             <p className="upload-title" style={{ color: 'var(--color-destructive)' }}>Upload failed</p>
-            <p className="upload-subtitle">{error}</p>
-            <button
-              className="upload-file-btn"
-              onClick={e => { e.stopPropagation(); reset(); fileInputRef.current?.click(); }}
-              type="button"
-            >
-              Try again
-            </button>
+            <p className="upload-subtitle" style={{ maxWidth: 480, margin: '0 auto var(--space-md)' }}>{error}</p>
+            <div className="flex items-center justify-center gap-sm flex-wrap">
+              <button
+                className="upload-file-btn"
+                onClick={e => { e.stopPropagation(); reset(); fileInputRef.current?.click(); }}
+                type="button"
+              >
+                Try again
+              </button>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={e => {
+                  e.stopPropagation();
+                  onUploaded(MOCK_DATASET);
+                }}
+                type="button"
+              >
+                Use sample AIDS dataset
+              </button>
+            </div>
           </>
         ) : (
           <>
