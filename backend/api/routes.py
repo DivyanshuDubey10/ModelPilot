@@ -215,6 +215,7 @@ def optimize_dataset(request: OptimizeRequest):
         
 
 @router.get("/optimize/{run_id}")
+@router.get("/runs/{run_id}")
 def get_optimization_run(run_id: str):
     try:
         run_data = load_optimization_run(run_id)
