@@ -40,12 +40,44 @@ export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) 
   const location = useLocation();
   const breadcrumbs = getBreadcrumbs(location.pathname);
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [isWaking, setIsWaking] = useState(false);
+
+  function pingBackend() {
+    return checkHealth(5000)
+      .then(res => {
+        if (res?.status === 'healthy') {
+          setApiStatus('online');
+          setIsWaking(false);
+          return true;
+        }
+        return false;
+      })
+      .catch(() => false);
+  }
+
+  function handleWakeBackend() {
+    setIsWaking(true);
+    setApiStatus('checking');
+
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts++;
+      const ok = await pingBackend();
+      if (ok || attempts >= 20) {
+        clearInterval(interval);
+        if (!ok) {
+          setApiStatus('offline');
+          setIsWaking(false);
+        }
+      }
+    }, 3000);
+  }
 
   useEffect(() => {
     let mounted = true;
 
     function verifyApi() {
-      checkHealth()
+      checkHealth(5000)
         .then(res => {
           if (mounted && res?.status === 'healthy') {
             setApiStatus('online');
@@ -111,7 +143,9 @@ export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) 
       </div>
 
       <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-        <div
+        <button
+          type="button"
+          onClick={apiStatus === 'offline' ? handleWakeBackend : undefined}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -121,13 +155,16 @@ export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) 
             fontSize: 12,
             background: 'var(--color-surface)',
             border: '1px solid var(--color-border)',
+            cursor: apiStatus === 'offline' ? 'pointer' : 'default',
           }}
           title={
             apiStatus === 'online'
               ? `Backend Connected: ${activeUrl || 'http://localhost:8000'}`
               : apiStatus === 'checking'
-              ? 'Connecting to backend (server may be waking up from sleep)…'
-              : 'Backend unreachable. Check server status or run uvicorn locally.'
+              ? isWaking
+                ? 'Waking up Render cloud instance (~30–50s)...'
+                : 'Connecting to backend…'
+              : 'Backend is sleeping (Render free tier). Click to wake it up!'
           }
         >
           <span
@@ -153,10 +190,12 @@ export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) 
             {apiStatus === 'online'
               ? 'API Online'
               : apiStatus === 'checking'
-              ? 'Connecting…'
-              : 'API Offline'}
+              ? isWaking
+                ? 'Waking Server…'
+                : 'Connecting…'
+              : 'API Sleeping · Click to Wake'}
           </span>
-        </div>
+        </button>
       </div>
     </header>
   );

@@ -166,14 +166,14 @@ async function request<T>(
 // ── HTTP Methods ─────────────────────────────────────────────
 
 export const api = {
-  get: <T>(endpoint: string) => request<T>(endpoint),
+  get: <T>(endpoint: string, timeoutMs?: number) => request<T>(endpoint, {}, timeoutMs),
 
   // Standard POST (short timeout)
-  post: <T>(endpoint: string, body?: unknown) =>
+  post: <T>(endpoint: string, body?: unknown, timeoutMs?: number) =>
     request<T>(endpoint, {
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined,
-    }),
+    }, timeoutMs),
 
   // Long-running POST (used for /api/optimize — allows full cold-start + training time)
   postLong: <T>(endpoint: string, body?: unknown) =>

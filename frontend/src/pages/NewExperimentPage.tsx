@@ -10,7 +10,7 @@ import {
   WarningCircle,
 } from '@phosphor-icons/react';
 import type { WizardDataset } from '../api/types';
-import { runOptimization } from '../api/endpoints';
+import { runOptimization, checkHealth } from '../api/endpoints';
 import DatasetUpload from '../components/dataset/DatasetUpload';
 import DatasetProfileView from '../components/dataset/DatasetProfile';
 import '../styles/wizard.css';
@@ -57,6 +57,7 @@ export default function NewExperimentPage() {
   const [launchStage, setLaunchStage] = useState(0);
   const [launchError, setLaunchError] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isWakingBackend, setIsWakingBackend] = useState(false);
 
   useEffect(() => {
     if (!launching) {
@@ -116,8 +117,45 @@ export default function NewExperimentPage() {
     if (!dataset || !targetColumn) return;
     setLaunching(true);
     setLaunchError(null);
+    setIsWakingBackend(false);
 
     try {
+      // Step 1: Pre-flight check to ensure Render is awake
+      let isHealthy = false;
+      try {
+        const ping = await checkHealth(4000);
+        isHealthy = ping?.status === 'healthy';
+      } catch {
+        isHealthy = false;
+      }
+
+      if (!isHealthy) {
+        setIsWakingBackend(true);
+        const wakeStart = Date.now();
+        // Poll every 3 seconds for up to 80 seconds while Render spins up
+        while (!isHealthy && Date.now() - wakeStart < 80_000) {
+          await new Promise(res => setTimeout(res, 3000));
+          try {
+            const ping = await checkHealth(4000);
+            if (ping?.status === 'healthy') {
+              isHealthy = true;
+              break;
+            }
+          } catch {
+            // Still starting up, keep polling
+          }
+        }
+        setIsWakingBackend(false);
+
+        if (!isHealthy) {
+          throw new Error(
+            'Render cloud server is taking longer than expected to wake from sleep. ' +
+            'Please click "API Sleeping · Click to Wake" in the top-right header or try again in a few moments.'
+          );
+        }
+      }
+
+      // Step 2: Backend is confirmed awake! Launch optimization with full timeout window
       const result = await runOptimization({
         dataset_path: dataset.dataset_path,
         target: targetColumn,
@@ -131,6 +169,7 @@ export default function NewExperimentPage() {
       setLaunchError(e instanceof Error ? e.message : 'Failed to start optimization');
     } finally {
       setLaunching(false);
+      setIsWakingBackend(false);
     }
   }
 
@@ -340,17 +379,24 @@ export default function NewExperimentPage() {
                   style={{
                     marginTop: 'var(--space-xl)',
                     padding: 'var(--space-lg)',
-                    background: 'rgba(59, 130, 246, 0.08)',
-                    border: '1px solid rgba(59, 130, 246, 0.25)',
+                    background: isWakingBackend ? 'rgba(245, 158, 11, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+                    border: isWakingBackend ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid rgba(59, 130, 246, 0.25)',
                     borderRadius: 'var(--radius-md)',
                   }}
                   aria-live="polite"
                 >
                   <div className="flex items-center justify-between mb-sm">
                     <div className="flex items-center gap-md">
-                      <Spinner size={18} className="spin" style={{ color: 'var(--color-primary, #3b82f6)' }} aria-hidden="true" />
+                      <Spinner
+                        size={18}
+                        className="spin"
+                        style={{ color: isWakingBackend ? 'var(--color-warning, #f59e0b)' : 'var(--color-primary, #3b82f6)' }}
+                        aria-hidden="true"
+                      />
                       <span className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
-                        {LAUNCH_STAGES[launchStage]}
+                        {isWakingBackend
+                          ? 'Waking up Render cloud backend (spin-up takes ~30–50s after idle)…'
+                          : LAUNCH_STAGES[launchStage]}
                       </span>
                     </div>
                     <span className="font-mono text-xs text-muted" style={{ fontWeight: 600 }}>
@@ -361,17 +407,19 @@ export default function NewExperimentPage() {
                     <div
                       style={{
                         height: '100%',
-                        width: `${Math.min(95, (launchStage + 1) * 20)}%`,
-                        background: 'var(--color-primary, #3b82f6)',
+                        width: isWakingBackend
+                          ? `${Math.min(90, Math.max(10, elapsedSeconds * 2))}%`
+                          : `${Math.min(95, (launchStage + 1) * 20)}%`,
+                        background: isWakingBackend ? 'var(--color-warning, #f59e0b)' : 'var(--color-primary, #3b82f6)',
                         borderRadius: 99,
                         transition: 'width 0.8s ease',
                       }}
                     />
                   </div>
                   <p className="text-xs text-muted" style={{ margin: 0 }}>
-                    {elapsedSeconds > 40
-                      ? 'Render cloud backend is cold-starting or training models. Almost ready, please keep this tab open…'
-                      : `Running ${maxExperiments} experiment${maxExperiments > 1 ? 's' : ''} (calibrated for Render cloud). Keep this tab open.`}
+                    {isWakingBackend
+                      ? 'The cloud server went to sleep after inactivity. It is spinning up now — optimization will launch automatically once ready.'
+                      : `Running ${maxExperiments} experiment${maxExperiments > 1 ? 's' : ''}. Keep this tab open.`}
                   </p>
                 </div>
               )}

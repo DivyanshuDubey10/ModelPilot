@@ -15,8 +15,8 @@ import type {
 
 // ── Health ────────────────────────────────────────────────────
 
-export async function checkHealth(): Promise<{ status: string; service: string }> {
-  return api.get('/api/health');
+export async function checkHealth(timeoutMs?: number): Promise<{ status: string; service: string }> {
+  return api.get('/api/health', timeoutMs);
 }
 
 // ── Dataset Upload ────────────────────────────────────────────
