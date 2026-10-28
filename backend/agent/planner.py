@@ -55,6 +55,16 @@ def reset_planner_state():
 
 def recommend_experiment(history, objective="recall", min_precision=0.70):
     global _nemotron_available
+
+    # Fast baseline start: for the very first experiment (iteration 0), start immediately
+    # with a standard 100-tree baseline. This saves ~20s of remote LLM latency on empty history.
+    if not history:
+        return {
+            "model_name": "random_forest",
+            "n_estimators": 100,
+            "reason": "Baseline benchmark: initialized with 100 trees before exploring parameter trade-offs.",
+        }
+
     fallback = fallback_recommendation(history)
 
     if fallback["n_estimators"] is None:

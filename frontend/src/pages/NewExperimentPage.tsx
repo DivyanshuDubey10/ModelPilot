@@ -275,22 +275,49 @@ export default function NewExperimentPage() {
 
               {/* Max Experiments */}
               <div className="form-group">
-                <label htmlFor="max-exp-input">Max Experiments (1–5)</label>
-                <input
-                  id="max-exp-input"
-                  className="input"
-                  type="number"
-                  min="1"
-                  max="5"
-                  value={maxExperiments}
-                  onChange={e => setMaxExperiments(parseInt(e.target.value))}
-                  style={{ maxWidth: 120 }}
-                  aria-describedby="max-exp-hint"
-                />
-                <p className="form-helper mt-sm" id="max-exp-hint">
-                  The agent will try up to this many Random Forest configurations.
-                  {' '}<strong>Keep at 2–3 on the cloud deployment</strong> to avoid timeouts (each experiment takes ~10–20s).
-                </p>
+                <label htmlFor="max-exp-input">Number of Optimization Iterations</label>
+                <div className="flex items-center gap-sm mt-xs mb-sm flex-wrap">
+                  {[
+                    { n: 1, label: '1 (Fast · ~2s)' },
+                    { n: 2, label: '2 (Recommended · ~15s)' },
+                    { n: 3, label: '3 (Thorough · ~30s)' },
+                  ].map(preset => (
+                    <button
+                      key={preset.n}
+                      type="button"
+                      className={`btn btn-sm ${maxExperiments === preset.n ? 'btn-primary' : 'btn-secondary'}`}
+                      onClick={() => setMaxExperiments(preset.n)}
+                      disabled={launching}
+                      style={{ fontSize: 13, padding: '6px 12px' }}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-md">
+                  <span className="text-xs text-muted">Custom:</span>
+                  <input
+                    id="max-exp-input"
+                    className="input"
+                    type="number"
+                    min="1"
+                    max="5"
+                    value={maxExperiments}
+                    onChange={e => {
+                      const v = parseInt(e.target.value, 10);
+                      if (!isNaN(v)) setMaxExperiments(Math.min(5, Math.max(1, v)));
+                    }}
+                    style={{ maxWidth: 80, padding: '4px 8px' }}
+                    aria-describedby="max-exp-hint"
+                    disabled={launching}
+                  />
+                  <span className="text-xs text-muted">(1–5 iterations)</span>
+                </div>
+                {maxExperiments >= 4 && (
+                  <p className="text-xs mt-sm" style={{ color: 'var(--color-warning, #f59e0b)', margin: '8px 0 0 0' }}>
+                    ⚠️ Running {maxExperiments} experiments with cloud LLM inference may take 60–90 seconds. Keep this tab open.
+                  </p>
+                )}
               </div>
 
               {/* Summary */}

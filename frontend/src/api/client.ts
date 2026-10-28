@@ -14,11 +14,10 @@
 
 /**
  * Timeout used for long-running requests (optimization).
- * Render free tier has a 100s gateway timeout; we use 95s so the client gives a friendly
- * actionable timeout message before the cloud proxy abruptly drops the TCP connection.
+ * We allow up to 120s to accommodate cloud cold starts and multi-model training.
  * Regular GET/health requests use SHORT_TIMEOUT_MS.
  */
-const LONG_TIMEOUT_MS = 95_000;   // 95 s — covers Render cold-start + multi-model training
+const LONG_TIMEOUT_MS = 120_000;  // 120 s — allows cold start + thorough training
 const SHORT_TIMEOUT_MS = 20_000;  // 20 s  — for health checks & simple GETs
 
 /**
