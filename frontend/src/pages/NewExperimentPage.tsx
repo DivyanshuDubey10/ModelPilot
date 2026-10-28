@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CheckCircle,
@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Spinner,
+  WarningCircle,
 } from '@phosphor-icons/react';
 import type { WizardDataset } from '../api/types';
 import { runOptimization } from '../api/endpoints';
@@ -29,6 +30,14 @@ const OBJECTIVE_OPTIONS = [
   { value: 'accuracy' as const, label: 'Maximize Accuracy', description: 'Overall correctness across all classes' },
 ];
 
+const LAUNCH_STAGES = [
+  'Connecting to backend & initializing experiment session…',
+  'AI Planner analyzing constraints & selecting model candidates…',
+  'Training candidate Random Forest models on dataset…',
+  'Evaluating precision & recall trade-offs across configurations…',
+  'Selecting optimal configuration & compiling experiment report…',
+];
+
 export default function NewExperimentPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
@@ -45,7 +54,26 @@ export default function NewExperimentPage() {
   const [maxExperiments, setMaxExperiments] = useState(5);
 
   const [launching, setLaunching] = useState(false);
+  const [launchStage, setLaunchStage] = useState(0);
   const [launchError, setLaunchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!launching) {
+      setLaunchStage(0);
+      return;
+    }
+    const t1 = setTimeout(() => setLaunchStage(1), 3000);
+    const t2 = setTimeout(() => setLaunchStage(2), 10000);
+    const t3 = setTimeout(() => setLaunchStage(3), 22000);
+    const t4 = setTimeout(() => setLaunchStage(4), 38000);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
+  }, [launching]);
 
   function onDatasetReady(d: WizardDataset) {
     setDataset(d);
@@ -264,8 +292,67 @@ export default function NewExperimentPage() {
                 </div>
               )}
 
+              {/* Live Optimization Progress Indicator */}
+              {launching && (
+                <div
+                  style={{
+                    marginTop: 'var(--space-xl)',
+                    padding: 'var(--space-lg)',
+                    background: 'rgba(59, 130, 246, 0.08)',
+                    border: '1px solid rgba(59, 130, 246, 0.25)',
+                    borderRadius: 'var(--radius-md)',
+                  }}
+                  aria-live="polite"
+                >
+                  <div className="flex items-center gap-md mb-sm">
+                    <Spinner size={18} className="spin" style={{ color: 'var(--color-primary, #3b82f6)' }} aria-hidden="true" />
+                    <span className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
+                      {LAUNCH_STAGES[launchStage]}
+                    </span>
+                  </div>
+                  <div style={{ height: 4, width: '100%', background: 'var(--color-border)', borderRadius: 99, overflow: 'hidden', margin: '8px 0' }}>
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${Math.min(95, (launchStage + 1) * 20)}%`,
+                        background: 'var(--color-primary, #3b82f6)',
+                        borderRadius: 99,
+                        transition: 'width 0.8s ease',
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted" style={{ margin: 0 }}>
+                    Training Random Forest models with up to {maxExperiments} iterations.
+                    {launchStage >= 3 ? ' (Render cloud backend may take ~45s if waking up from sleep).' : ' Please keep this tab open.'}
+                  </p>
+                </div>
+              )}
+
+              {/* Optimization Launch Error Alert */}
               {launchError && (
-                <p className="form-error mt-lg" role="alert">{launchError}</p>
+                <div
+                  style={{
+                    marginTop: 'var(--space-xl)',
+                    padding: 'var(--space-md) var(--space-lg)',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: 'var(--radius-md)',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 'var(--space-md)',
+                  }}
+                  role="alert"
+                >
+                  <WarningCircle size={20} weight="fill" style={{ color: 'var(--color-destructive, #ef4444)', flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-destructive, #ef4444)', marginBottom: 2 }}>
+                      Optimization Failed
+                    </div>
+                    <div style={{ fontSize: 13, color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
+                      {launchError}
+                    </div>
+                  </div>
+                </div>
               )}
             </>
           )}
