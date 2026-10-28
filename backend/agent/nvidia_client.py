@@ -21,7 +21,7 @@ def get_nvidia_client():
             "https://integrate.api.nvidia.com/v1",
         ),
         api_key=api_key,
-        timeout=10.0,
+        timeout=5.0,
     )
 
 

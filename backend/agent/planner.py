@@ -44,10 +44,24 @@ def fallback_recommendation(history):
     }
 
 
+_nemotron_available = True
+
+
+def reset_planner_state():
+    """Reset the Nemotron availability flag (useful for retries or tests)."""
+    global _nemotron_available
+    _nemotron_available = True
+
+
 def recommend_experiment(history, objective="recall", min_precision=0.70):
+    global _nemotron_available
     fallback = fallback_recommendation(history)
 
     if fallback["n_estimators"] is None:
+        return fallback
+
+    # If Nemotron failed previously in this session, skip calling it to prevent repeated timeouts
+    if not _nemotron_available:
         return fallback
 
     prompt = f"""
@@ -71,7 +85,20 @@ Choose one untested tree count. Return ONLY valid JSON:
 
     try:
         response = ask_nemotron(prompt)
-        recommendation = json.loads(response)
+        cleaned = response.strip()
+
+        # Handle markdown fences like ```json { ... } ```
+        if "```" in cleaned:
+            parts = cleaned.split("```")
+            for part in parts:
+                p = part.strip()
+                if p.startswith("json"):
+                    p = p[4:].strip()
+                if p.startswith("{") and p.endswith("}"):
+                    cleaned = p
+                    break
+
+        recommendation = json.loads(cleaned)
 
         trees = recommendation.get("n_estimators")
 
@@ -89,5 +116,6 @@ Choose one untested tree count. Return ONLY valid JSON:
 
     except Exception as exc:
         print(f"Nemotron unavailable or returned an invalid response: {exc}")
-        print("Using Python fallback planner.")
+        print("Using Python fallback planner for this and remaining iterations.")
+        _nemotron_available = False
         return fallback

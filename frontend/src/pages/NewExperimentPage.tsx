@@ -51,21 +51,35 @@ export default function NewExperimentPage() {
   // Step 3: optimization config
   const [objective, setObjective] = useState<'recall' | 'f1' | 'accuracy'>('recall');
   const [minPrecision, setMinPrecision] = useState(0.70);
-  const [maxExperiments, setMaxExperiments] = useState(5);
+  const [maxExperiments, setMaxExperiments] = useState(2);
 
   const [launching, setLaunching] = useState(false);
   const [launchStage, setLaunchStage] = useState(0);
   const [launchError, setLaunchError] = useState<string | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+
+  useEffect(() => {
+    if (!launching) {
+      setElapsedSeconds(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setElapsedSeconds(s => s + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [launching]);
 
   useEffect(() => {
     if (!launching) {
       setLaunchStage(0);
       return;
     }
-    const t1 = setTimeout(() => setLaunchStage(1), 3000);
-    const t2 = setTimeout(() => setLaunchStage(2), 10000);
-    const t3 = setTimeout(() => setLaunchStage(3), 22000);
-    const t4 = setTimeout(() => setLaunchStage(4), 38000);
+    // Stage timing calibrated to maxExperiments * ~12s per experiment + cold-start overhead
+    const perExp = maxExperiments * 12_000;
+    const t1 = setTimeout(() => setLaunchStage(1), 2_000);
+    const t2 = setTimeout(() => setLaunchStage(2), 5_000);
+    const t3 = setTimeout(() => setLaunchStage(3), 5_000 + perExp * 0.5);
+    const t4 = setTimeout(() => setLaunchStage(4), 5_000 + perExp * 0.85);
 
     return () => {
       clearTimeout(t1);
@@ -73,7 +87,7 @@ export default function NewExperimentPage() {
       clearTimeout(t3);
       clearTimeout(t4);
     };
-  }, [launching]);
+  }, [launching, maxExperiments]);
 
   function onDatasetReady(d: WizardDataset) {
     setDataset(d);
@@ -275,6 +289,7 @@ export default function NewExperimentPage() {
                 />
                 <p className="form-helper mt-sm" id="max-exp-hint">
                   The agent will try up to this many Random Forest configurations.
+                  {' '}<strong>Keep at 2–3 on the cloud deployment</strong> to avoid timeouts (each experiment takes ~10–20s).
                 </p>
               </div>
 
@@ -304,10 +319,15 @@ export default function NewExperimentPage() {
                   }}
                   aria-live="polite"
                 >
-                  <div className="flex items-center gap-md mb-sm">
-                    <Spinner size={18} className="spin" style={{ color: 'var(--color-primary, #3b82f6)' }} aria-hidden="true" />
-                    <span className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
-                      {LAUNCH_STAGES[launchStage]}
+                  <div className="flex items-center justify-between mb-sm">
+                    <div className="flex items-center gap-md">
+                      <Spinner size={18} className="spin" style={{ color: 'var(--color-primary, #3b82f6)' }} aria-hidden="true" />
+                      <span className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
+                        {LAUNCH_STAGES[launchStage]}
+                      </span>
+                    </div>
+                    <span className="font-mono text-xs text-muted" style={{ fontWeight: 600 }}>
+                      {elapsedSeconds}s
                     </span>
                   </div>
                   <div style={{ height: 4, width: '100%', background: 'var(--color-border)', borderRadius: 99, overflow: 'hidden', margin: '8px 0' }}>
@@ -322,8 +342,9 @@ export default function NewExperimentPage() {
                     />
                   </div>
                   <p className="text-xs text-muted" style={{ margin: 0 }}>
-                    Training Random Forest models with up to {maxExperiments} iterations.
-                    {launchStage >= 3 ? ' (Render cloud backend may take ~45s if waking up from sleep).' : ' Please keep this tab open.'}
+                    {elapsedSeconds > 40
+                      ? 'Render cloud backend is cold-starting or training models. Almost ready, please keep this tab open…'
+                      : `Running ${maxExperiments} experiment${maxExperiments > 1 ? 's' : ''} (calibrated for Render cloud). Keep this tab open.`}
                   </p>
                 </div>
               )}
