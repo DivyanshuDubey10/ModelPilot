@@ -365,5 +365,19 @@
       "recall": 0.7307692307692307,
       "f1": 0.7715736040609137
     }
+  },
+  {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\fraud_dataset.csv",
+    "target": "is_fraud",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 200,
+    "metrics": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
   }
 ]

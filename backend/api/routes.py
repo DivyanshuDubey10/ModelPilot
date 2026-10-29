@@ -389,45 +389,98 @@ def analyze_dataset(request: DatasetRequest):
 
 # ── File Upload ───────────────────────────────────────────────
 
+
 @router.post("/upload")
 async def upload_dataset(file: UploadFile = File(...)):
-    """
-    Accept a CSV upload, save it to backend/datasets/, profile it,
-    and return the profile so the wizard can proceed.
-    """
-    if not file.filename or not file.filename.endswith(".csv"):
+    """Save and profile a CSV without retaining the entire file in memory."""
+    import os
+    import uuid
+
+    MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+    MAX_ROWS = 50_000
+    MAX_COLUMNS = 100
+
+    if not file.filename or not file.filename.lower().endswith(".csv"):
         raise HTTPException(
             status_code=400,
             detail="Only CSV files are supported.",
         )
 
-    try:
-        dest = UPLOAD_DIR / file.filename
-        contents = await file.read()
-        dest.write_bytes(contents)
+    # Generate a safe, unique filename.
+    safe_filename = f"{uuid.uuid4().hex}.csv"
+    dest = UPLOAD_DIR / safe_filename
+    total_bytes = 0
 
-        import io
-        df = pd.read_csv(io.BytesIO(contents))
-        profile = profile_dataset(df)
+    try:
+        # Stream the upload to disk with a hard size limit.
+        with dest.open("wb") as output:
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+
+                total_bytes += len(chunk)
+                if total_bytes > MAX_UPLOAD_BYTES:
+                    raise HTTPException(
+                        status_code=413,
+                        detail="CSV exceeds the 10 MB upload limit.",
+                    )
+
+                output.write(chunk)
+
+        # Read only the first 100 rows to check the column structure.
+        header = pd.read_csv(dest, nrows=100)
+
+        if len(header.columns) > MAX_COLUMNS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"CSV exceeds the {MAX_COLUMNS}-column limit.",
+            )
+
+        # Check the total row count without loading the full DataFrame.
+        row_count = 0
+        with dest.open("rb") as csv_file:
+            for chunk in pd.read_csv(csv_file, chunksize=5000):
+                row_count += len(chunk)
+                if row_count > MAX_ROWS:
+                    raise HTTPException(
+                        status_code=413,
+                        detail=f"CSV exceeds the {MAX_ROWS}-row limit.",
+                    )
+
+        # Profile a bounded sample to keep memory usage predictable.
+        sample = pd.read_csv(dest, nrows=min(row_count, 5000))
+        profile = profile_dataset(sample)
 
         return {
             "dataset_path": str(dest),
             "filename": file.filename,
-            "rows": profile["rows"],
-            "columns": profile["columns"],
-            "column_names": profile["column_names"],
-            "data_types": profile["data_types"],
+            "rows": row_count,
+            "columns": len(header.columns),
+            "column_names": header.columns.tolist(),
+            "data_types": header.dtypes.astype(str).to_dict(),
             "missing_values": profile["missing_values"],
-            "duplicates": profile["duplicates"],
+            "duplicates": None,
+            "profile_note": (
+                "Missing-value counts are based on a sample of up to 5,000 rows. "
+                "Duplicate count was not calculated during upload."
+            ),
         }
 
     except HTTPException:
+        if dest.exists():
+            dest.unlink()
         raise
     except Exception as exc:
+        if dest.exists():
+            dest.unlink()
         raise HTTPException(
             status_code=400,
             detail=f"Could not process uploaded file: {exc}",
         )
+    finally:
+        await file.close()
+
 
 
 # ── History list ──────────────────────────────────────────────

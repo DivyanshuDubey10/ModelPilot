@@ -4,10 +4,29 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
+
 def prepare_data(df, target):
-    X=df.drop(columns=[target])
-    y=df[target]
-    return X,y
+    if target not in df.columns:
+        raise ValueError(f"Target column '{target}' not found.")
+
+    # Missing target labels cannot be imputed for supervised learning.
+    df = df.dropna(subset=[target]).copy()
+
+    if df.empty:
+        raise ValueError(
+            "No rows remain after removing missing target labels."
+        )
+
+    X = df.drop(columns=[target]).copy()
+    y = df[target].copy()
+
+    if y.nunique() < 2:
+        raise ValueError(
+            "The target must contain at least two distinct classes."
+        )
+
+    return X, y
+
 
 def identify_feature_types(X):
     numerical_columns = X.select_dtypes(include="number").columns.tolist()
