@@ -39,7 +39,7 @@ export default function DatasetUpload({ onUploaded }: DatasetUploadProps) {
 
   function validate(f: File): string | null {
     if (!f.name.endsWith('.csv')) return 'Only CSV files are supported.';
-    if (f.size > 200 * 1024 * 1024) return 'File must be under 200 MB.';
+    if (f.size > 30 * 1024 * 1024) return 'File must be under 30 MB.';
     return null;
   }
 

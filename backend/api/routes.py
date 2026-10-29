@@ -415,6 +415,28 @@ def analyze_dataset(request: DatasetRequest):
         )
 
 
+def count_csv_duplicates(csv_path, chunksize=5000):
+    """Count exact duplicate rows across the entire CSV."""
+    seen = set()
+    duplicate_count = 0
+
+    for chunk in pd.read_csv(csv_path, chunksize=chunksize):
+        # Hash complete rows so duplicate detection also works
+        # across different chunks.
+        row_hashes = pd.util.hash_pandas_object(
+            chunk, index=False
+        )
+
+        for row_hash in row_hashes:
+            value = int(row_hash)
+
+            if value in seen:
+                duplicate_count += 1
+            else:
+                seen.add(value)
+
+    return duplicate_count
+
 # ── File Upload ───────────────────────────────────────────────
 
 
@@ -479,6 +501,7 @@ async def upload_dataset(file: UploadFile = File(...)):
         # Profile a bounded sample to keep memory usage predictable.
         sample = pd.read_csv(dest, nrows=min(row_count, 5000))
         profile = profile_dataset(sample)
+        duplicates = count_csv_duplicates(dest)
 
         return {
             "dataset_path": str(dest),
@@ -488,10 +511,10 @@ async def upload_dataset(file: UploadFile = File(...)):
             "column_names": header.columns.tolist(),
             "data_types": header.dtypes.astype(str).to_dict(),
             "missing_values": profile["missing_values"],
-            "duplicates": None,
+            "duplicates": duplicates,
             "profile_note": (
                 "Missing-value counts are based on a sample of up to 5,000 rows. "
-                "Duplicate count was not calculated during upload."
+                "Duplicate count is calculated across the entire CSV."
             ),
         }
 
