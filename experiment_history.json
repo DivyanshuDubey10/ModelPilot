@@ -379,5 +379,187 @@
       "recall": 1.0,
       "f1": 1.0
     }
+  },
+  {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+    "target": "fraud_flag",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 100,
+    "metrics": {
+      "accuracy": 0.99808,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+    "target": "fraud_flag",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 50,
+    "metrics": {
+      "accuracy": 0.99808,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+    "target": "fraud_flag",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 200,
+    "metrics": {
+      "accuracy": 0.99808,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+    "target": "fraud_flag",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 100,
+    "metrics": {
+      "accuracy": 0.99808,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+    "target": "fraud_flag",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 100,
+    "metrics": {
+      "accuracy": 0.99808,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+    "target": "fraud_flag",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 50,
+    "metrics": {
+      "accuracy": 0.99808,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+    "target": "fraud_flag",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 200,
+    "metrics": {
+      "accuracy": 0.99808,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+    "target": "fraud_flag",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 100,
+    "metrics": {
+      "accuracy": 0.99808,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+    "target": "fraud_flag",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 100,
+    "metrics": {
+      "accuracy": 0.99808,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+    "target": "fraud_flag",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 50,
+    "metrics": {
+      "accuracy": 0.99808,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+    "target": "fraud_flag",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 100,
+    "metrics": {
+      "accuracy": 0.99808,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+    "target": "fraud_flag",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 50,
+    "metrics": {
+      "accuracy": 0.99808,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
+  },
+  {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+    "target": "fraud_flag",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "model_name": "random_forest",
+    "n_estimators": 200,
+    "metrics": {
+      "accuracy": 0.99808,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0
+    }
   }
 ]

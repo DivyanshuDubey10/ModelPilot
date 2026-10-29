@@ -1,5 +1,3 @@
-from pyexpat import model
-
 from backend.ml_engine.trainer import train_model
 from backend.ml_engine.evaluator import evaluate_model
 
@@ -54,8 +52,11 @@ def record_experiment(history, result):
 
 
 
+
 def suggest_next_experiment(history):
-    candidates = [50, 100, 200, 300, 500]
+    # Keep the demo fast by limiting the candidate configurations.
+    candidates = [25, 50, 100]
+
     tested = {result["n_estimators"] for result in history}
 
     remaining = [
@@ -81,11 +82,12 @@ def suggest_next_experiment(history):
 
     best_trees = best["n_estimators"]
 
-    # Explore the next larger configuration first.
-    larger = [trees for trees in remaining if trees > best_trees]
+    larger = [
+        trees for trees in remaining
+        if trees > best_trees
+    ]
 
     if larger:
         return min(larger)
 
-    # If no larger configuration remains, try the next unused one.
     return remaining[0]

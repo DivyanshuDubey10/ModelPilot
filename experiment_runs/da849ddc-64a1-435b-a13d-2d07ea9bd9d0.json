@@ -1,0 +1,27 @@
+{
+  "run_id": "da849ddc-64a1-435b-a13d-2d07ea9bd9d0",
+  "created_at": "2026-10-29T04:58:19.928772+00:00",
+  "metadata": {
+    "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+    "target": "fraud_flag",
+    "objective": "recall",
+    "min_precision": 0.7,
+    "max_experiments": 1
+  },
+  "experiments": [
+    {
+      "dataset_path": "D:\\AIML projects\\Upi fraud detection\\data\\upi_transactions_2024.csv",
+      "target": "fraud_flag",
+      "objective": "recall",
+      "min_precision": 0.7,
+      "model_name": "random_forest",
+      "n_estimators": 100,
+      "metrics": {
+        "accuracy": 0.99808,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0
+      }
+    }
+  ]
+}

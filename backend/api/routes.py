@@ -424,8 +424,8 @@ async def upload_dataset(file: UploadFile = File(...)):
     import os
     import uuid
 
-    MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
-    MAX_ROWS = 50_000
+    MAX_UPLOAD_BYTES = 30 * 1024 * 1024  # 30 MB
+    MAX_ROWS = 500000
     MAX_COLUMNS = 100
 
     if not file.filename or not file.filename.lower().endswith(".csv"):
@@ -451,7 +451,7 @@ async def upload_dataset(file: UploadFile = File(...)):
                 if total_bytes > MAX_UPLOAD_BYTES:
                     raise HTTPException(
                         status_code=413,
-                        detail="CSV exceeds the 10 MB upload limit.",
+                        detail="CSV exceeds the 30 MB upload limit.",
                     )
 
                 output.write(chunk)

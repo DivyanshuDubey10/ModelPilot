@@ -1,4 +1,3 @@
-
 import os
 
 from dotenv import load_dotenv
@@ -31,7 +30,7 @@ def ask_nemotron(prompt):
     response = client.chat.completions.create(
         model=os.getenv(
             "NVIDIA_MODEL",
-            "nvidia/nemotron-3.5-super-vl-120b-a12b",
+            "nvidia/nemotron-3-ultra-550b-a55b",
         ),
         messages=[
             {
