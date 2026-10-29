@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   CheckCircle,
@@ -7,9 +7,10 @@ import {
   ArrowLeft,
   ArrowRight,
   Spinner,
+  WarningCircle,
 } from '@phosphor-icons/react';
 import type { WizardDataset } from '../api/types';
-import { runOptimization } from '../api/endpoints';
+import { runOptimization, checkHealth } from '../api/endpoints';
 import DatasetUpload from '../components/dataset/DatasetUpload';
 import DatasetProfileView from '../components/dataset/DatasetProfile';
 import '../styles/wizard.css';
@@ -29,6 +30,14 @@ const OBJECTIVE_OPTIONS = [
   { value: 'accuracy' as const, label: 'Maximize Accuracy', description: 'Overall correctness across all classes' },
 ];
 
+const LAUNCH_STAGES = [
+  'Connecting to backend & initializing experiment session…',
+  'AI Planner analyzing constraints & selecting model candidates…',
+  'Training candidate Random Forest models on dataset…',
+  'Evaluating precision & recall trade-offs across configurations…',
+  'Selecting optimal configuration & compiling experiment report…',
+];
+
 export default function NewExperimentPage() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
@@ -42,10 +51,44 @@ export default function NewExperimentPage() {
   // Step 3: optimization config
   const [objective, setObjective] = useState<'recall' | 'f1' | 'accuracy'>('recall');
   const [minPrecision, setMinPrecision] = useState(0.70);
-  const [maxExperiments, setMaxExperiments] = useState(5);
+  const [maxExperiments, setMaxExperiments] = useState(2);
 
   const [launching, setLaunching] = useState(false);
+  const [launchStage, setLaunchStage] = useState(0);
   const [launchError, setLaunchError] = useState<string | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isWakingBackend, setIsWakingBackend] = useState(false);
+
+  useEffect(() => {
+    if (!launching) {
+      setElapsedSeconds(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setElapsedSeconds(s => s + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [launching]);
+
+  useEffect(() => {
+    if (!launching) {
+      setLaunchStage(0);
+      return;
+    }
+    // Stage timing calibrated to maxExperiments * ~12s per experiment + cold-start overhead
+    const perExp = maxExperiments * 12_000;
+    const t1 = setTimeout(() => setLaunchStage(1), 2_000);
+    const t2 = setTimeout(() => setLaunchStage(2), 5_000);
+    const t3 = setTimeout(() => setLaunchStage(3), 5_000 + perExp * 0.5);
+    const t4 = setTimeout(() => setLaunchStage(4), 5_000 + perExp * 0.85);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
+  }, [launching, maxExperiments]);
 
   function onDatasetReady(d: WizardDataset) {
     setDataset(d);
@@ -74,8 +117,45 @@ export default function NewExperimentPage() {
     if (!dataset || !targetColumn) return;
     setLaunching(true);
     setLaunchError(null);
+    setIsWakingBackend(false);
 
     try {
+      // Step 1: Pre-flight check to ensure Render is awake
+      let isHealthy = false;
+      try {
+        const ping = await checkHealth(4000);
+        isHealthy = ping?.status === 'healthy';
+      } catch {
+        isHealthy = false;
+      }
+
+      if (!isHealthy) {
+        setIsWakingBackend(true);
+        const wakeStart = Date.now();
+        // Poll every 3 seconds for up to 80 seconds while Render spins up
+        while (!isHealthy && Date.now() - wakeStart < 80_000) {
+          await new Promise(res => setTimeout(res, 3000));
+          try {
+            const ping = await checkHealth(4000);
+            if (ping?.status === 'healthy') {
+              isHealthy = true;
+              break;
+            }
+          } catch {
+            // Still starting up, keep polling
+          }
+        }
+        setIsWakingBackend(false);
+
+        if (!isHealthy) {
+          throw new Error(
+            'Render cloud server is taking longer than expected to wake from sleep. ' +
+            'Please click "API Sleeping · Click to Wake" in the top-right header or try again in a few moments.'
+          );
+        }
+      }
+
+      // Step 2: Backend is confirmed awake! Launch optimization with full timeout window
       const result = await runOptimization({
         dataset_path: dataset.dataset_path,
         target: targetColumn,
@@ -89,6 +169,7 @@ export default function NewExperimentPage() {
       setLaunchError(e instanceof Error ? e.message : 'Failed to start optimization');
     } finally {
       setLaunching(false);
+      setIsWakingBackend(false);
     }
   }
 
@@ -233,21 +314,49 @@ export default function NewExperimentPage() {
 
               {/* Max Experiments */}
               <div className="form-group">
-                <label htmlFor="max-exp-input">Max Experiments (1–5)</label>
-                <input
-                  id="max-exp-input"
-                  className="input"
-                  type="number"
-                  min="1"
-                  max="5"
-                  value={maxExperiments}
-                  onChange={e => setMaxExperiments(parseInt(e.target.value))}
-                  style={{ maxWidth: 120 }}
-                  aria-describedby="max-exp-hint"
-                />
-                <p className="form-helper mt-sm" id="max-exp-hint">
-                  The agent will try up to this many Random Forest configurations.
-                </p>
+                <label htmlFor="max-exp-input">Number of Optimization Iterations</label>
+                <div className="flex items-center gap-sm mt-xs mb-sm flex-wrap">
+                  {[
+                    { n: 1, label: '1 (Fast · ~2s)' },
+                    { n: 2, label: '2 (Recommended · ~15s)' },
+                    { n: 3, label: '3 (Thorough · ~30s)' },
+                  ].map(preset => (
+                    <button
+                      key={preset.n}
+                      type="button"
+                      className={`btn btn-sm ${maxExperiments === preset.n ? 'btn-primary' : 'btn-secondary'}`}
+                      onClick={() => setMaxExperiments(preset.n)}
+                      disabled={launching}
+                      style={{ fontSize: 13, padding: '6px 12px' }}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-md">
+                  <span className="text-xs text-muted">Custom:</span>
+                  <input
+                    id="max-exp-input"
+                    className="input"
+                    type="number"
+                    min="1"
+                    max="5"
+                    value={maxExperiments}
+                    onChange={e => {
+                      const v = parseInt(e.target.value, 10);
+                      if (!isNaN(v)) setMaxExperiments(Math.min(5, Math.max(1, v)));
+                    }}
+                    style={{ maxWidth: 80, padding: '4px 8px' }}
+                    aria-describedby="max-exp-hint"
+                    disabled={launching}
+                  />
+                  <span className="text-xs text-muted">(1–5 iterations)</span>
+                </div>
+                {maxExperiments >= 4 && (
+                  <p className="text-xs mt-sm" style={{ color: 'var(--color-warning, #f59e0b)', margin: '8px 0 0 0' }}>
+                    ⚠️ Running {maxExperiments} experiments with cloud LLM inference may take 60–90 seconds. Keep this tab open.
+                  </p>
+                )}
               </div>
 
               {/* Summary */}
@@ -264,8 +373,82 @@ export default function NewExperimentPage() {
                 </div>
               )}
 
+              {/* Live Optimization Progress Indicator */}
+              {launching && (
+                <div
+                  style={{
+                    marginTop: 'var(--space-xl)',
+                    padding: 'var(--space-lg)',
+                    background: isWakingBackend ? 'rgba(245, 158, 11, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+                    border: isWakingBackend ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid rgba(59, 130, 246, 0.25)',
+                    borderRadius: 'var(--radius-md)',
+                  }}
+                  aria-live="polite"
+                >
+                  <div className="flex items-center justify-between mb-sm">
+                    <div className="flex items-center gap-md">
+                      <Spinner
+                        size={18}
+                        className="spin"
+                        style={{ color: isWakingBackend ? 'var(--color-warning, #f59e0b)' : 'var(--color-primary, #3b82f6)' }}
+                        aria-hidden="true"
+                      />
+                      <span className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
+                        {isWakingBackend
+                          ? 'Waking up Render cloud backend (spin-up takes ~30–50s after idle)…'
+                          : LAUNCH_STAGES[launchStage]}
+                      </span>
+                    </div>
+                    <span className="font-mono text-xs text-muted" style={{ fontWeight: 600 }}>
+                      {elapsedSeconds}s
+                    </span>
+                  </div>
+                  <div style={{ height: 4, width: '100%', background: 'var(--color-border)', borderRadius: 99, overflow: 'hidden', margin: '8px 0' }}>
+                    <div
+                      style={{
+                        height: '100%',
+                        width: isWakingBackend
+                          ? `${Math.min(90, Math.max(10, elapsedSeconds * 2))}%`
+                          : `${Math.min(95, (launchStage + 1) * 20)}%`,
+                        background: isWakingBackend ? 'var(--color-warning, #f59e0b)' : 'var(--color-primary, #3b82f6)',
+                        borderRadius: 99,
+                        transition: 'width 0.8s ease',
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted" style={{ margin: 0 }}>
+                    {isWakingBackend
+                      ? 'The cloud server went to sleep after inactivity. It is spinning up now — optimization will launch automatically once ready.'
+                      : `Running ${maxExperiments} experiment${maxExperiments > 1 ? 's' : ''}. Keep this tab open.`}
+                  </p>
+                </div>
+              )}
+
+              {/* Optimization Launch Error Alert */}
               {launchError && (
-                <p className="form-error mt-lg" role="alert">{launchError}</p>
+                <div
+                  style={{
+                    marginTop: 'var(--space-xl)',
+                    padding: 'var(--space-md) var(--space-lg)',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    borderRadius: 'var(--radius-md)',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 'var(--space-md)',
+                  }}
+                  role="alert"
+                >
+                  <WarningCircle size={20} weight="fill" style={{ color: 'var(--color-destructive, #ef4444)', flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--color-destructive, #ef4444)', marginBottom: 2 }}>
+                      Optimization Failed
+                    </div>
+                    <div style={{ fontSize: 13, color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
+                      {launchError}
+                    </div>
+                  </div>
+                </div>
               )}
             </>
           )}

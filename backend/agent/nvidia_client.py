@@ -21,6 +21,7 @@ def get_nvidia_client():
             "https://integrate.api.nvidia.com/v1",
         ),
         api_key=api_key,
+        timeout=5.0,
     )
 
 
@@ -43,7 +44,7 @@ def ask_nemotron(prompt):
             {"role": "user", "content": prompt},
         ],
         temperature=0.2,
-        max_tokens=1024,
+        max_tokens=128,
         stream=False,
     )
 

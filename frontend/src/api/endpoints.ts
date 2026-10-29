@@ -15,8 +15,8 @@ import type {
 
 // ── Health ────────────────────────────────────────────────────
 
-export async function checkHealth(): Promise<{ status: string; service: string }> {
-  return api.get('/api/health');
+export async function checkHealth(timeoutMs?: number): Promise<{ status: string; service: string }> {
+  return api.get('/api/health', timeoutMs);
 }
 
 // ── Dataset Upload ────────────────────────────────────────────
@@ -59,7 +59,8 @@ export async function analyzeDataset(
 export async function runOptimization(
   data: OptimizeRequest
 ): Promise<OptimizeResponse> {
-  return api.post<OptimizeResponse>('/api/optimize', data);
+  // Use postLong — optimization training can take 45-115s on Render free tier
+  return api.postLong<OptimizeResponse>('/api/optimize', data);
 }
 
 // ── Retrieve a Saved Optimization Run ────────────────────────

@@ -1,5 +1,8 @@
+import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { CaretRight, List, X } from '@phosphor-icons/react';
+import { checkHealth } from '../../api/endpoints';
+import { getApiBaseUrl } from '../../api/client';
 
 const routeNames: Record<string, string> = {
   '/': 'Dashboard',
@@ -36,6 +39,66 @@ interface HeaderProps {
 export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) {
   const location = useLocation();
   const breadcrumbs = getBreadcrumbs(location.pathname);
+  const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [isWaking, setIsWaking] = useState(false);
+
+  function pingBackend() {
+    return checkHealth(5000)
+      .then(res => {
+        if (res?.status === 'healthy') {
+          setApiStatus('online');
+          setIsWaking(false);
+          return true;
+        }
+        return false;
+      })
+      .catch(() => false);
+  }
+
+  function handleWakeBackend() {
+    setIsWaking(true);
+    setApiStatus('checking');
+
+    let attempts = 0;
+    const interval = setInterval(async () => {
+      attempts++;
+      const ok = await pingBackend();
+      if (ok || attempts >= 20) {
+        clearInterval(interval);
+        if (!ok) {
+          setApiStatus('offline');
+          setIsWaking(false);
+        }
+      }
+    }, 3000);
+  }
+
+  useEffect(() => {
+    let mounted = true;
+
+    function verifyApi() {
+      checkHealth(5000)
+        .then(res => {
+          if (mounted && res?.status === 'healthy') {
+            setApiStatus('online');
+          } else if (mounted) {
+            setApiStatus('offline');
+          }
+        })
+        .catch(() => {
+          if (mounted) setApiStatus('offline');
+        });
+    }
+
+    verifyApi();
+    const timer = setInterval(verifyApi, 30000);
+    return () => {
+      mounted = false;
+      clearInterval(timer);
+    };
+  }, []);
+
+  const activeUrl = getApiBaseUrl();
 
   return (
     <header className="header">
@@ -79,7 +142,61 @@ export default function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) 
         </nav>
       </div>
 
-      <div className="header-right" />
+      <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+        <button
+          type="button"
+          onClick={apiStatus === 'offline' ? handleWakeBackend : undefined}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '4px 10px',
+            borderRadius: 99,
+            fontSize: 12,
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
+            cursor: apiStatus === 'offline' ? 'pointer' : 'default',
+          }}
+          title={
+            apiStatus === 'online'
+              ? `Backend Connected: ${activeUrl || 'http://localhost:8000'}`
+              : apiStatus === 'checking'
+              ? isWaking
+                ? 'Waking up Render cloud instance (~30–50s)...'
+                : 'Connecting to backend…'
+              : 'Backend is sleeping (Render free tier). Click to wake it up!'
+          }
+        >
+          <span
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: '50%',
+              backgroundColor:
+                apiStatus === 'online'
+                  ? 'var(--color-success, #10b981)'
+                  : apiStatus === 'checking'
+                  ? 'var(--color-warning, #f59e0b)'
+                  : 'var(--color-destructive, #ef4444)',
+              boxShadow:
+                apiStatus === 'online'
+                  ? '0 0 6px rgba(16, 185, 129, 0.5)'
+                  : apiStatus === 'checking'
+                  ? '0 0 6px rgba(245, 158, 11, 0.5)'
+                  : 'none',
+            }}
+          />
+          <span style={{ color: 'var(--color-text-muted)', fontSize: 11, fontWeight: 500 }}>
+            {apiStatus === 'online'
+              ? 'API Online'
+              : apiStatus === 'checking'
+              ? isWaking
+                ? 'Waking Server…'
+                : 'Connecting…'
+              : 'API Sleeping · Click to Wake'}
+          </span>
+        </button>
+      </div>
     </header>
   );
 }

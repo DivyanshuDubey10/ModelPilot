@@ -30,6 +30,29 @@ from backend.ml_engine.problem_detector import detect_problem_type
 UPLOAD_DIR = Path(__file__).resolve().parents[2] / "backend" / "datasets"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
+
+def resolve_dataset_path(path_str: str) -> Path:
+    """Safely resolve dataset path across different platforms, relative paths, and uploads."""
+    p = Path(path_str)
+    if p.is_file():
+        return p
+
+    repo_root = Path(__file__).resolve().parents[2]
+    cand1 = repo_root / path_str
+    if cand1.is_file():
+        return cand1
+
+    cand2 = UPLOAD_DIR / p.name
+    if cand2.is_file():
+        return cand2
+
+    cand3 = repo_root / "backend" / "datasets" / p.name
+    if cand3.is_file():
+        return cand3
+
+    return p
+
+
 router = APIRouter()
 
 
@@ -113,7 +136,8 @@ def optimize_dataset(request: OptimizeRequest):
         )
 
     try:
-        df = pd.read_csv(request.dataset_path)
+        dataset_file = resolve_dataset_path(request.dataset_path)
+        df = pd.read_csv(dataset_file)
 
         if request.target not in df.columns:
             raise HTTPException(
@@ -215,6 +239,7 @@ def optimize_dataset(request: OptimizeRequest):
         
 
 @router.get("/optimize/{run_id}")
+@router.get("/runs/{run_id}")
 def get_optimization_run(run_id: str):
     try:
         run_data = load_optimization_run(run_id)
@@ -247,7 +272,8 @@ class ExperimentRequest(BaseModel):
 @router.post("/experiment")
 def execute_experiment(request: ExperimentRequest):
     try:
-        df = pd.read_csv(request.dataset_path)
+        dataset_file = resolve_dataset_path(request.dataset_path)
+        df = pd.read_csv(dataset_file)
 
         if request.target not in df.columns:
             raise HTTPException(
@@ -323,7 +349,8 @@ def health_check():
 @router.post("/profile")
 def profile_dataset_endpoint(request: DatasetRequest):
     try:
-        df = pd.read_csv(request.dataset_path)
+        dataset_file = resolve_dataset_path(request.dataset_path)
+        df = pd.read_csv(dataset_file)
 
         if request.target not in df.columns:
             raise HTTPException(
@@ -357,7 +384,8 @@ def profile_dataset_endpoint(request: DatasetRequest):
 @router.post("/analyze")
 def analyze_dataset(request: DatasetRequest):
     try:
-        df = pd.read_csv(request.dataset_path)
+        dataset_file = resolve_dataset_path(request.dataset_path)
+        df = pd.read_csv(dataset_file)
 
         if request.target not in df.columns:
             raise HTTPException(

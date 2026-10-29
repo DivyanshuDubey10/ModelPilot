@@ -16,6 +16,7 @@ def train_model(
         classifier = RandomForestClassifier(
             n_estimators=n_estimators,
             random_state=42,
+            n_jobs=-1,
         )
     else:
         classifier = LogisticRegression(max_iter=1000)
